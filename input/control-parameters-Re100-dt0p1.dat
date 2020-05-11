@@ -1,0 +1,11 @@
+density           1.0
+viscosity         0.01
+bodyforce         0.0 0.0 0.0
+stabilisation     1.0 1.0 0.0
+tis               2
+rhoInf            0.0
+dt                0.2
+FinalTime         200.0
+MaximumSteps      100000
+OutputFrequency   1
+tolerance         0.000001
