@@ -680,7 +680,7 @@ int LagrangeElem2DNavierStokesQuad4Node::calcStiffnessAndResidual(vector<vector<
 
 
 //
-int LagrangeElem2DNavierStokesQuad4Node::calcStiffnessAndResidual(vector<vector<double> >& node_coords, double* elemData, double* timeData, VectorXd& solnPrev, VectorXd& solnPrev2, VectorXd& solnCur, VectorXd& solnDotCur, MatrixXd& Klocal, VectorXd& Flocal, double timeCur)
+int LagrangeElem2DNavierStokesQuad4Node::calcStiffnessAndResidual(vector<vector<double> >& node_coords, double* elemData, double* timeData, VectorXd& solnPrev, VectorXd& solnPrev2, VectorXd& solnCur, VectorXd& solnDotCur, MatrixXdRM& Klocal, VectorXd& Flocal, double timeCur)
 {
     // stabilised formulation
     // semi-implicit scheme - type B

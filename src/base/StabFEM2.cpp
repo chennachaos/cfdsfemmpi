@@ -37,7 +37,7 @@ int StabFEM::prepareMatrixPattern()
 
     int  size1, size2, row, col;
     int  tempDOF, domTemp, npElem, ind;
-    int  r, c, r1, c1, count=0, count1=0, count2=0, ii, jj, ee, dd, ind1, ind2;
+    int  r, c, r1, c1, count=0, count1=0, count2=0, ii, jj, ee, dd, ind1, ind2, nsize;
     int  *tt1, *tt2, val1, val2, nnz, nnz_max_row, n1, n2, kk, e1, e2, ll, aa, bb, nn, dof;
     int  side, start1, start2, nr1, nr2;
 
@@ -94,14 +94,16 @@ int StabFEM::prepareMatrixPattern()
     cout << " ndof           = " << '\t' << ndof << endl;
     cout << " Total DOF      = " << '\t' << totalDOF << endl;
 
+    vector<vector<int> >  forAssyMat;
+    forAssyMat.resize(totalDOF);
 
-    for(ee=0;ee<nElem;++ee)
+    for(ee=0; ee<nElem; ++ee)
     {
       npElem = elems[ee]->nodeNums.size();
 
-      ind = ndof*npElem;
+      nsize = ndof*npElem;
 
-      elems[ee]->forAssyVec.resize(ind);
+      elems[ee]->forAssyVec.resize(nsize);
 
       for(ii=0; ii<npElem; ++ii)
       {
@@ -116,8 +118,28 @@ int StabFEM::prepareMatrixPattern()
       }
 
       //printVector(elems[ee]->forAssyVec);
+
+      tt1 = &(elems[ee]->forAssyVec[0]);
+
+      for(ii=0;ii<nsize;ii++)
+      {
+        r = tt1[ii];
+
+        if(r != -1)
+        {
+          for(jj=0;jj<nsize;jj++)
+          {
+            if(tt1[jj] != -1)
+            {
+              //printf("ii.... %5d \t %5d \t %5d \t %5d \n",ii, jj, r, tt[jj]);
+              forAssyMat[r].push_back(tt1[jj]);
+            }
+          }
+        }
+      }
     }
 
+    printf("\n Preparing matrix pattern DONE \n\n");
 
     bool pp=false;
     //pp=true;
@@ -142,27 +164,20 @@ int StabFEM::prepareMatrixPattern()
 
     printf("\n element DOF values initialised \n\n");
 
-    // remove data objects
-
-    //ID.clear();
-    //forAssyMat.clear();
-
-    printf("\n     StabFEM::prepareMatrixPattern()  .... FINISHED ...\n\n");
-
-    cout <<  " StabFEM::setSolverDataForFullyImplicit() ... STARTED " << endl;
-
     cout << " Total DOF   = " << '\t' << totalDOF << endl;
 
 
     ndofs_local = totalDOF;
 
-    VectorXi nnzVec(totalDOF);
+    VectorXi  nnzVec(totalDOF);
 
-    ind = 50;
-    if(totalDOF < 50) ind = totalDOF;
-
-    for(ii=0; ii<totalDOF; ii++)
-      nnzVec(ii) = ind;
+    nnz = 0;
+    for(ii=0;ii<totalDOF;ii++)
+    {
+      findUnique(forAssyMat[ii]);
+      nnzVec[ii] = forAssyMat[ii].size();
+      nnz += nnzVec[ii];
+    }
 
     cout <<  " Initialising petsc solver " << endl;
 
@@ -190,16 +205,12 @@ int StabFEM::prepareMatrixPattern()
         vecIntTemp = elems[ee]->forAssyVec;
 
         errpetsc = MatSetValues(solverPetsc->mtx, size1, &vecIntTemp[0], size1, &vecIntTemp[0], Klocal, INSERT_VALUES);
-
-        //printVector(elems[ee]->forAssyVec);
     } //for(ee=0;)
 
 
     solverPetsc->currentStatus = PATTERN_OK;
 
-    PetscPrintf(MPI_COMM_WORLD, " HBSplineCutFEM::prepareMatrixPattern()  .... FINISHED. Took %f  milliseconds \n", (tend-tstart)*1000);
-
-    cout <<  " StabFEM::setSolverDataForFullyImplicit() ... ENDED " << endl;
+    PetscPrintf(MPI_COMM_WORLD, " StabFEM::prepareMatrixPattern()  .... FINISHED. Took %f  milliseconds \n", (tend-tstart)*1000);
 
     return;
 }
@@ -230,7 +241,7 @@ int  StabFEM::solveFullyImplicit()
     VectorXd  TotalForce(3);
     ind = npElem*ndof;
     VectorXd  Flocal(ind);
-    MatrixXd  Klocal(ind, ind);
+    MatrixXdRM  Klocal(ind, ind);
     PetscScalar *arrayTempSoln;
 
     SetTimeParametersFluid(tis, rhoInf, dt, td);
@@ -306,30 +317,8 @@ int  StabFEM::solveFullyImplicit()
                 } // if(iter == 0)
 
                 //cout << "Assembling matrices and vectors " << endl;
+                solverPetsc->assembleMatrixAndVectorSerial(elems[ee]->forAssyVec, Klocal, Flocal);
 
-                // assemble matrices and vectors
-                for(ii=0; ii<size1; ii++)
-                {
-                  row = elems[ee]->forAssyVec[ii];
-
-                  reacVec[elems[ee]->globalDOFnums[ii]] += Flocal[ii];
-
-                  if(row != -1)
-                  {
-                    VecSetValue(solverPetsc->rhsVec, row, Flocal(ii), ADD_VALUES);
-
-                    for(jj=0; jj<size1; jj++)
-                    {
-                      col = elems[ee]->forAssyVec[jj];
-
-                      if(col != -1)
-                      {
-                        MatSetValue(solverPetsc->mtx, row, col, Klocal(ii,jj), ADD_VALUES);
-                        //solverPetsc->assembleMatrixAndVectorCutFEM(start, start, elems[ee]->forAssyVec, dof_map_old_to_new, Klocal, Flocal);
-                      }
-                    }
-                  }//if(row != -1)
-                } //for(ii=0;)
             } //Element Loop
 
             //cout << "Adding boundary conditions " << endl;
@@ -391,7 +380,7 @@ int  StabFEM::solveFullyImplicit()
         cout << "Postprocessing " << endl;
         postProcess();
 
-        double TotalForce[2] = {0.0, 0.0};
+        double TotalForce[3] = {0.0, 0.0, 0.0};
         for(ii=0; ii<nOutputFaceLoads; ++ii)
         {
           TotalForce[0] +=  reacVec[outputEdges[ii][0]*ndof];
@@ -412,33 +401,6 @@ int  StabFEM::solveFullyImplicit()
           break;
  
     } //Time loop
-
-
-    /*
-    cout << " Computing errors \n " << endl;
-    double totalError = 0.0;
-    //cout << " index = " << index << endl;
-    for(int index=0; index<4; index++)
-    {
-      totalError = 0.0;
-      for(ee=0; ee<nElem; ee++)
-      {
-        //Compute the element force vector, including residual force
-        totalError += elems[ee]->CalculateError(node_coords, elemData, timeData, velo, veloDot, pres, 5.0, index);
-      }
-
-      totalError = sqrt(totalError);
-
-      if(index == 0)
-        printf(" \n\n \t L2 Error in X-velocity = %12.6E \n\n " , totalError);
-      else if(index == 1)
-        printf(" \n\n \t L2 Error in Y-velocity = %12.6E \n\n " , totalError);
-      else if(index == 2)
-        printf(" \n\n \t L2 Error in pressure   = %12.6E \n\n " , totalError);
-      else
-        printf(" \n\n \t H1 Error in velocity   = %12.6E \n\n " , totalError);
-    }
-    */
 
 
     return 0;
@@ -471,17 +433,20 @@ void StabFEM::addExternalForces(double loadFact)
     return;
 }
 
+
 void StabFEM::computeElementErrors(int ind)
 {
     cout << " Computing errors \n " << endl;
 
-    double totalError = 0.0, timeNow;
+    double totalError = 0.0, timeNow = 5.0;
+    //cout << " index = " << index << endl;
     for(int index=0; index<4; index++)
     {
       totalError = 0.0;
-      for(int ee=0; ee<nElem; ++ee)
+      for(int ee=0; ee<nElem; ee++)
       {
-        //totalError += elems[ee]->CalculateError(node_coords, elemData, timeData, solnVTK, veloDot, pres, timeNow, index);
+        //Compute the element force vector, including residual force
+        //totalError += elems[ee]->CalculateError(node_coords, elemData, timeData, soln, solnDot, timeNow, index);
       }
 
       totalError = sqrt(totalError);

@@ -29,6 +29,7 @@ typedef  DynamicSparseMatrix<double>  DynamicSparseMatrixXd;
 typedef  DynamicSparseMatrix<float>   DynamicSparseMatrixXf;
 typedef  DynamicSparseMatrix<int>     DynamicSparseMatrixXi;
 
+typedef  Matrix<double, Dynamic, Dynamic, RowMajor>  MatrixXdRM;
 
 
 #endif

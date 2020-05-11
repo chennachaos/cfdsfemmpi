@@ -55,15 +55,13 @@ class SolverPetsc
 
     virtual int free();
 
-    virtual int printInfo();
-
     virtual int printMatrix(int dig=8, int dig2=4, bool gfrmt=true, int indent = 0, bool interactive = false);
 
-    virtual double giveMatrixCoefficient(int,int);
+    virtual double getMatrixCoefficient(int,int);
 
-    virtual int assembleMatrixAndVector(vector<int>& row, vector<int>& col, MatrixXd& Klocal, VectorXd& Flocal);
+    virtual int assembleMatrixAndVectorSerial(vector<int>& forAssyElem, MatrixXdRM& Klocal, VectorXd& Flocal);
 
-    virtual int assembleMatrixAndVector(int start, int c1, vector<int>& forAssyElem, vector<int>& dof_map, MatrixXd& Klocal, VectorXd& Flocal);
+    virtual int assembleMatrixAndVectorParallel(vector<int>& forAssyElem, vector<int>& dof_map, MatrixXd& Klocal, VectorXd& Flocal);
 
     virtual int factorise();
 

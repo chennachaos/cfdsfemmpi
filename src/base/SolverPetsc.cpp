@@ -198,14 +198,14 @@ int SolverPetsc::zeroMtx()
 
   VecZeroEntries(reacVec);
 
-  return 1;
+  return 0;
 }
 
 
 
 int SolverPetsc::free()
 {
-  //if(FREED) return 1;
+  //if(FREED) return 0;
 
   PetscPrintf(MPI_COMM_WORLD, "SolverPetsc::free() \n");
 
@@ -233,27 +233,14 @@ int SolverPetsc::free()
 
   PetscPrintf(MPI_COMM_WORLD, "SolverPetsc::free() \n");
 
-  return 1;
+  return 0;
 }
 
 
-
-
-int SolverPetsc::printInfo()
-{
-  MatGetInfo(mtx, MAT_LOCAL, &info);
-
-  PetscPrintf(MPI_COMM_WORLD, "Petsc solver:  nRow = %12d \n", nRow);
-  PetscPrintf(MPI_COMM_WORLD, "               nnz  = %12d \n\n", info.nz_allocated);
-
-  return 1;
-}
 
 
 int SolverPetsc::printMatrix(int dig, int dig2, bool gfrmt, int indent, bool interactive)
 {
-  printInfo();
-
   errpetsc = MatAssemblyBegin(mtx, MAT_FINAL_ASSEMBLY);//CHKERRQ(errpetsc);
   errpetsc = MatAssemblyEnd(mtx, MAT_FINAL_ASSEMBLY);//CHKERRQ(errpetsc);
  
@@ -263,11 +250,11 @@ int SolverPetsc::printMatrix(int dig, int dig2, bool gfrmt, int indent, bool int
   MatView(mtx, PETSC_VIEWER_STDOUT_WORLD);
   //MatView(A,viewer);
 
-  return 1;
+  return 0;
 }
 
 
-double SolverPetsc::giveMatrixCoefficient(int row, int col)
+double SolverPetsc::getMatrixCoefficient(int row, int col)
 { 
   //return mtx(row,col,true);
   return 0.0;
@@ -352,13 +339,12 @@ int SolverPetsc::solve()
   {
     PetscPrintf(MPI_COMM_WORLD, "\n Divergence... %d iterations. \n\n", its);
     exit(1);
-    return 1;
+    return -1;
   }
   else
   {
     PetscPrintf(MPI_COMM_WORLD, "\n Convergence in %d iterations.\n\n", its);
   }
-
 
   //errpetsc = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);//CHKERRQ(errpetsc);
   //VecView(soln, PETSC_VIEWER_STDOUT_WORLD);
@@ -394,30 +380,23 @@ int SolverPetsc::factoriseAndSolve()
 
 
 
-int SolverPetsc::assembleMatrixAndVector(vector<int>& row, vector<int>& col, MatrixXd& Klocal, VectorXd& Flocal)
+
+int SolverPetsc::assembleMatrixAndVectorSerial(vector<int>& forAssyElem, MatrixXdRM& Klocal, VectorXd& Flocal)
 {
-  int ii, jj;
+  int  size1 = forAssyElem.size();
 
-  int size1 = row.size();
-  int size2 = col.size();
+  VecSetValues(rhsVec, size1, &forAssyElem[0], &Flocal[0], ADD_VALUES);
+  MatSetValues(mtx,    size1, &forAssyElem[0], size1, &forAssyElem[0], &Klocal(0,0), ADD_VALUES);
 
-  for(ii=0;ii<size1;ii++)
-  {
-    VecSetValue(rhsVec, row[ii], Flocal(ii), ADD_VALUES);
-
-    for(jj=0;jj<size2;jj++)
-    {
-      MatSetValue(mtx, row[ii], col[jj], Klocal(ii,jj), ADD_VALUES);
-    }
-  }
-
-  return 1;
+  return 0;
 }
 
 
 
 
-int SolverPetsc::assembleMatrixAndVector(int start, int c1, vector<int>& forAssyElem, vector<int>& dof_map, MatrixXd& Klocal, VectorXd& Flocal)
+
+
+int SolverPetsc::assembleMatrixAndVectorParallel(vector<int>& forAssyElem, vector<int>& dof_map, MatrixXd& Klocal, VectorXd& Flocal)
 {
   int ii, jj, r, kk=0;
 
@@ -445,7 +424,4 @@ int SolverPetsc::assembleMatrixAndVector(int start, int c1, vector<int>& forAssy
 
   return 0;
 }
-
-
-
 
