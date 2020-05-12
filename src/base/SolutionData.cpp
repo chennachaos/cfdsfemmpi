@@ -70,8 +70,9 @@ void  SolutionData::timeUpdate()
   solnPrev3  = solnPrev2;
   solnPrev2  = solnPrev;
   solnPrev   = soln;
-
   solnDotPrev  = solnDot;
+
+  soln = 2.0*solnPrev - solnPrev2;
 
   solnExtrap = solnPrev;
   //solnExtrap = 2.0*solnPrev - solnPrev2;

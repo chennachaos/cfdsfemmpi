@@ -334,9 +334,9 @@ void StabFEM::prepareInputData()
           //elems[ee] = new LagrangeElem3DNavierStokesHexa8Node;
       }
 
-      elems[ee]->nodeNums = elemConn[ee];
-
       elems[ee]->SolnData = &(SolnData);
+
+      elems[ee]->nodeNums = elemConn[ee];
 
       elems[ee]->prepareElemData(node_coords);
     }

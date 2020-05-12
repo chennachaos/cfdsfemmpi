@@ -228,13 +228,14 @@ int  StabFEM::solveFullyImplicit()
     ///////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////
 
+
     int  stepsCompleted=0;
     int  aa, bb, ee, ii, jj, kk, count, row, col, ind, n1, n2, size1, size2;
 
     double  norm_rhs, fact, fact1, fact2;
     double  timeNow=dt, timeFact=0.0;
 
-    VectorXd  td(100), reacVec(nNode*ndof);
+    VectorXd  reacVec(nNode*ndof);
     VectorXd  TotalForce(3);
     ind = npElem*ndof;
     VectorXd  Flocal(ind);
@@ -251,8 +252,8 @@ int  StabFEM::solveFullyImplicit()
     {
         cout << " Time = " << timeNow << endl;
 
+        SolnData.setTimeParam();
         SolnData.timeUpdate();
-
         //
         if(timeNow <= 1.0)
         {
@@ -383,6 +384,11 @@ int  StabFEM::solveFullyImplicit()
 
         fout_convdata <<  timeNow << '\t' << TotalForce[0] << '\t' << TotalForce[1] << endl;
         cout << endl; cout << endl;
+
+        //SolnData.solnPrev2    =  SolnData.solnPrev;
+        //SolnData.solnPrev     =  SolnData.soln;
+        //SolnData.solnDotPrev  =  SolnData.solnDot;
+
 
         timeNow = timeNow + dt;
 

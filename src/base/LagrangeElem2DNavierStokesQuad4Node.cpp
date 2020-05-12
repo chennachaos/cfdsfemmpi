@@ -910,11 +910,6 @@ int LagrangeElem2DNavierStokesQuad4Node::calcStiffnessAndResidual(vector<vector<
                 Klocal(TIp1, TJp1) += Da*Dj(1,1);
                 Klocal(TIp1, TJp2) += Da*Dj(1,2);
 
-                //Klocal(TI,   TJ)   += ( (tau[0]*af) * b1 * rStab(0) * Nv[gp][jj] );
-                //Klocal(TI,   TJp1) += ( (tau[0]*af) * b2 * rStab(0) * Nv[gp][jj] );
-                //Klocal(TIp1, TJ)   += ( (tau[0]*af) * b1 * rStab(1) * Nv[gp][jj] );
-                //Klocal(TIp1, TJp1) += ( (tau[0]*af) * b2 * rStab(1) * Nv[gp][jj] );
-
                 // PSPG stabilisation
                 Klocal(TIp2, TJ)   += (b1*Dj(0,0) + b2*Dj(1,0))*tau[1];
                 Klocal(TIp2, TJp1) += (b1*Dj(0,1) + b2*Dj(1,1))*tau[1];
