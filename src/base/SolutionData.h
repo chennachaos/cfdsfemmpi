@@ -9,27 +9,15 @@
 class  SolutionData
 {
   public:
-    int  nNode_Velo, nNode_Pres, ndim;
-    int  nDBC, nFBC;
-    int  totalDOFvelo, totalDOFpres;
-    double  rho, dt;
+    int  vecsize, tis;
+    double  rhoInf, dt;
 
-  public:
-
-    int  tis;
-
-    VectorXd  pres, presCur, presPrev, presPrev2, presPrev3;
-    VectorXd  presDot, presDotPrev, presDotCur, presDiff;
-    VectorXd  velo, veloCur, veloDiff, veloPrev, veloPrev2, veloPrev3;
-    VectorXd  veloDot, veloDotPrev, acceCur;
-
+    VectorXd  solnDot, solnDotPrev, solnDotCur, solnExtrap;
+    VectorXd  soln, solnPrev, solnPrev2, solnPrev3, solnPrev4, solnCur, solnInit, solnApplied;
     VectorXd  td;
 
-    vector<double>  FluidProps;
-    vector<int>  node_map_new_to_old;
-    vector<int>  node_map_old_to_new;
-
-    vector<vector<double> > DirichletBCs;
+    vector<int>  node_map_new_to_old, node_map_old_to_new;
+    vector<int>  dof_map_new_to_old, dof_map_old_to_new;
 
 
     SolutionData();
@@ -40,19 +28,17 @@ class  SolutionData
     {  tis = ttt; }
 
     void setSpectralRadius(double ttt)
-    {  rho = ttt; }
+    {  rhoInf = ttt; }
 
-    void  initialise();
+    void  initialise(int size1);
+
+    void  setZero();
 
     void  setTimeParam();
 
     void  timeUpdate();
 
     void  updateIterStep();
-
-    void  applyDirichletBCs(double fact);
-
-    void  addNodalForces(double fact);
 
     void  reset();
 };

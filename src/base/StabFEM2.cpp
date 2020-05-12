@@ -228,9 +228,6 @@ int  StabFEM::solveFullyImplicit()
     ///////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////
 
-    soln.setZero();      solnPrev.setZero();      solnPrev2.setZero();      solnCur.setZero();
-    solnDot.setZero();   solnDotPrev.setZero();   solnDotCur.setZero();
-
     int  stepsCompleted=0;
     int  aa, bb, ee, ii, jj, kk, count, row, col, ind, n1, n2, size1, size2;
 
@@ -244,8 +241,6 @@ int  StabFEM::solveFullyImplicit()
     MatrixXdRM  Klocal(ind, ind);
     PetscScalar *arrayTempSoln;
 
-    SetTimeParametersFluid(tis, rhoInf, dt, td);
-
     //KimMoinFlowUnsteadyNavierStokes  analy(elemData[0], elemData[1], 1.0);
 
 
@@ -255,6 +250,8 @@ int  StabFEM::solveFullyImplicit()
     for(int tstep=0; tstep<stepsMax; tstep++)
     {
         cout << " Time = " << timeNow << endl;
+
+        SolnData.timeUpdate();
 
         //
         if(timeNow <= 1.0)
@@ -274,10 +271,7 @@ int  StabFEM::solveFullyImplicit()
         cout << " Iteration loop " << endl;
         for(int iter=0; iter<10; iter++)
         {
-            solnDot    = td[9]*soln + td[10]*solnPrev + td[15]*solnDotPrev;
-
-            solnCur    = td[2]*soln    + (1.0-td[2])*solnPrev;
-            solnDotCur = td[1]*solnDot + (1.0-td[1])*solnDotPrev;
+            SolnData.updateIterStep();
 
             //cout << " Zeroing the solver " << endl;
             solverPetsc->zeroMtx();
@@ -289,7 +283,7 @@ int  StabFEM::solveFullyImplicit()
             // loop over elements and compute matrix and residual
             for(ee=0; ee<nElem; ee++)
             {
-                elems[ee]->calcStiffnessAndResidual(node_coords, elemData, &td[0], solnPrev, solnPrev2, solnCur, solnDotCur, Klocal, Flocal, timeNow);
+                elems[ee]->calcStiffnessAndResidual(node_coords, elemData, Klocal, Flocal, timeNow);
 
                 size1 = elems[ee]->forAssyVec.size();
 
@@ -303,7 +297,7 @@ int  StabFEM::solveFullyImplicit()
 
                         if(aa == -1) // this DOF has a prescribed value
                         {
-                            fact = solnApplied[elems[ee]->globalDOFnums[ii]];
+                            fact = SolnData.solnApplied[elems[ee]->globalDOFnums[ii]];
 
                             for(jj=0; jj<size1; jj++)
                             {
@@ -333,7 +327,7 @@ int  StabFEM::solveFullyImplicit()
 
                 jj = n1*ndof+n2;
 
-                soln[jj]  += solnApplied[jj];
+                SolnData.soln[jj]  += SolnData.solnApplied[jj];
               }
             }
 
@@ -369,7 +363,7 @@ int  StabFEM::solveFullyImplicit()
 
                 for(ii=0; ii<totalDOF; ii++)
                 {
-                  soln[assyForSoln[ii]]   +=  arrayTempSoln[ii];
+                  SolnData.soln[assyForSoln[ii]]   +=  arrayTempSoln[ii];
                 }
 
                 VecRestoreArray(solverPetsc->solnVec, &arrayTempSoln);
@@ -389,11 +383,6 @@ int  StabFEM::solveFullyImplicit()
 
         fout_convdata <<  timeNow << '\t' << TotalForce[0] << '\t' << TotalForce[1] << endl;
         cout << endl; cout << endl;
-
-        solnPrev2    =  solnPrev;
-        solnPrev     =  soln;
-        solnDotPrev  =  solnDot;
-
 
         timeNow = timeNow + dt;
 

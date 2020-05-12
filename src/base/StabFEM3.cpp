@@ -48,9 +48,9 @@ void  StabFEM::postProcess()
 
         kk = ii*ndof;
 
-        vec[0] = soln[kk];
-        vec[1] = soln[kk+1];
-        val    = soln[kk+2];
+        vec[0] = SolnData.soln[kk];
+        vec[1] = SolnData.soln[kk+1];
+        val    = SolnData.soln[kk+2];
 
         vecVTK->InsertTuple(ii, vec);
         scaVTK->SetTuple1(ii, val);
@@ -84,10 +84,10 @@ void  StabFEM::postProcess()
 
         kk = ii*ndof;
 
-        vec[0] = soln[kk];
-        vec[1] = soln[kk+1];
-        vec[2] = soln[kk+2];
-        val    = soln[kk+3];
+        vec[0] = SolnData.soln[kk];
+        vec[1] = SolnData.soln[kk+1];
+        vec[2] = SolnData.soln[kk+2];
+        val    = SolnData.soln[kk+3];
 
         vecVTK->InsertTuple(ii, vec);
         scaVTK->SetTuple1(ii, val);

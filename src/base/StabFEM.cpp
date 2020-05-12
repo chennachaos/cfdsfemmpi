@@ -336,6 +336,8 @@ void StabFEM::prepareInputData()
 
       elems[ee]->nodeNums = elemConn[ee];
 
+      elems[ee]->SolnData = &(SolnData);
+
       elems[ee]->prepareElemData(node_coords);
     }
 
@@ -348,19 +350,7 @@ void StabFEM::prepareInputData()
     //
     ///////////////////////////////////////////////////////////////////
 
-    soln.resize(nNode*ndof);
-    soln.setZero();
-
-    solnInit  = soln;
-    solnPrev  = soln;
-    solnPrev2 = soln;
-    solnPrev3 = soln;
-    solnPrev4 = soln;
-
-    solnDot     = soln;
-    solnDotPrev = soln;
-    solnDotCur  = soln;
-    solnApplied = soln;
+    SolnData.initialise(nNode*ndof);
 
     double  xx, yy, zz, fact;
 
@@ -368,7 +358,7 @@ void StabFEM::prepareInputData()
 
     Kovasznay analy;
 
-    solnApplied.setZero();
+    SolnData.solnApplied.setZero();
     for(ii=0; ii<nDBC; ++ii)
     {
         n1 = DirichletBCs[ii][0];
@@ -381,9 +371,9 @@ void StabFEM::prepareInputData()
 
         //DirichletBCsVelo[ii][2] = analy.computeValue(n2, xx, yy);
 
-        solnApplied(jj) = DirichletBCs[ii][2];
+        SolnData.solnApplied(jj) = DirichletBCs[ii][2];
     }
-    //printVector(solnApplied);
+    //printVector(SolnData.solnApplied);
 
     printf("     StabFEM::prepareInputData()  .... FINISHED ...\n\n");
 
@@ -403,7 +393,7 @@ void StabFEM::assignBoundaryConditions(double timeCur, double dt, double timeFac
 
         ind = n1*ndof+n2;
 
-        solnApplied[ind] = DirichletBCs[ii][2] * timeFact - soln[ind];
+        SolnData.solnApplied[ind] = DirichletBCs[ii][2] * timeFact - SolnData.soln[ind];
         //cout << ii << '\t' << n1 << '\t' << n2 << '\t' << ind << '\t' << solnApplied[ind] << endl;
 
         //solnApplied[ind] = analy.computeValue(n2, node_coords[n1][0], node_coords[n1][1], 0.0, timeNow) - soln[ind];
@@ -427,11 +417,11 @@ void StabFEM::setInitialConditions()
         zz = node_coords[ii][2];
 
         //veloPrev(ii*2) = 2.0*yy*(3.0-yy)/3.0;
-        solnPrev(ii*ndim) = 1.0*yy;
+        SolnData.solnPrev(ii*ndim) = 1.0*yy;
 
         //solnPrev(ii*ndim) = 16.0*0.45*yy*zz*(0.41-yy)*(0.41-zz)/0.41/0.41/0.41/0.41;
     }
-    soln = solnPrev;
+    SolnData.soln = SolnData.solnPrev;
 
     return;
 }

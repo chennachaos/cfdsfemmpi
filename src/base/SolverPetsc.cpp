@@ -338,6 +338,7 @@ int SolverPetsc::solve()
   if(reason<0)
   {
     PetscPrintf(MPI_COMM_WORLD, "\n Divergence... %d iterations. \n\n", its);
+    cout <<  reason << endl;
     exit(1);
     return -1;
   }

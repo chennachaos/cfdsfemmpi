@@ -8,6 +8,7 @@
 #include <fstream>
 #include "ElementBase.h"
 #include "SolverPetsc.h"
+#include "SolutionData.h"
 
 
 using std::vector;
@@ -69,15 +70,13 @@ class StabFEM
         vector<vector<double> >  nodeForcesData;
         vector<vector<double> >  ElemFaceLoadData;
 
+        SolutionData  SolnData;
 
         ElementBase  **elems;
         ElementBase  **elemsFaces;
 
-        VectorXd  solnInit, ForceVectorExternal;
+        VectorXd  solnVec, ForceVectorExternal;
         VectorXd  totalForce, totalMoment, centroid;
-        VectorXd  solnDot, solnDotPrev, solnDotCur;
-        VectorXd  soln, solnCur, solnPrev, solnPrev2, solnPrev3, solnPrev4;
-        VectorXd  solnApplied, solnVec;
 
         string  infilename;
         ofstream  fout_convdata;

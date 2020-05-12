@@ -680,7 +680,7 @@ int LagrangeElem2DNavierStokesQuad4Node::calcStiffnessAndResidual(vector<vector<
 
 
 //
-int LagrangeElem2DNavierStokesQuad4Node::calcStiffnessAndResidual(vector<vector<double> >& node_coords, double* elemData, double* timeData, VectorXd& solnPrev, VectorXd& solnPrev2, VectorXd& solnCur, VectorXd& solnDotCur, MatrixXdRM& Klocal, VectorXd& Flocal, double timeCur)
+int LagrangeElem2DNavierStokesQuad4Node::calcStiffnessAndResidual(vector<vector<double> >& node_coords, double* elemData, MatrixXdRM& Klocal, VectorXd& Flocal, double timeCur)
 {
     // stabilised formulation
     // semi-implicit scheme - type B
@@ -713,11 +713,11 @@ int LagrangeElem2DNavierStokesQuad4Node::calcStiffnessAndResidual(vector<vector<
     double  rho = elemData[0];
     double  mu  = elemData[1];
 
-    double  am = timeData[1];
-    double  af = timeData[2];
-    double  acceFact = timeData[8];
+    double  am = SolnData->td[1];
+    double  af = SolnData->td[2];
+    double  acceFact = SolnData->td[8];
     double  muTaf = mu*af;
-    double  dt = timeData[5]/af;
+    double  dt = SolnData->td[5]/af;
 
     //KimMoinFlowUnsteadyNavierStokes  analy(rho, mu, 1.0);
 
@@ -754,8 +754,8 @@ int LagrangeElem2DNavierStokesQuad4Node::calcStiffnessAndResidual(vector<vector<
             TIp1 = TI+1;
             TIp2 = TI+2;
 
-            b1 = solnPrev[TI];
-            b2 = solnPrev[TIp1];
+            b1 = SolnData->solnPrev[TI];
+            b2 = SolnData->solnPrev[TIp1];
 
             velPrev[0] += b1*Nv[gp][ii];
             velPrev[1] += b2*Nv[gp][ii];
@@ -765,9 +765,9 @@ int LagrangeElem2DNavierStokesQuad4Node::calcStiffnessAndResidual(vector<vector<
             gradPrev(1,0) += b2*dNvdx[gp][ii];
             gradPrev(1,1) += b2*dNvdy[gp][ii];
 
-            b1 = solnCur[TI];
-            b2 = solnCur[TIp1];
-            b3 = solnCur[TIp2];
+            b1 = SolnData->solnCur[TI];
+            b2 = SolnData->solnCur[TIp1];
+            b3 = SolnData->solnCur[TIp2];
 
             vel[0]     += b1*Nv[gp][ii];
             vel[1]     += b2*Nv[gp][ii];
@@ -778,8 +778,8 @@ int LagrangeElem2DNavierStokesQuad4Node::calcStiffnessAndResidual(vector<vector<
             grad(1,0)  += b2*dNvdx[gp][ii];
             grad(1,1)  += b2*dNvdy[gp][ii];
 
-            velDot[0] += solnDotCur[TI]*Nv[gp][ii];
-            velDot[1] += solnDotCur[TIp1]*Nv[gp][ii];
+            velDot[0] += SolnData->solnDotCur[TI]*Nv[gp][ii];
+            velDot[1] += SolnData->solnDotCur[TIp1]*Nv[gp][ii];
 
             dp(0)     += b3*dNvdx[gp][ii];
             dp(1)     += b3*dNvdy[gp][ii];

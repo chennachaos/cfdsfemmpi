@@ -17,7 +17,7 @@ class  LagrangeElem2DNavierStokesQuad4Node : public ElementBase
     void prepareElemData(vector<vector<double> >& node_coods);
 
 
-    virtual int  calcStiffnessAndResidual(vector<vector<double> >& node_coords, double* elemData, double* timeData, VectorXd& solnPrev, VectorXd& solnPrev2, VectorXd& solnCur, VectorXd& solnDotCur, MatrixXdRM& Klocal, VectorXd& Flocal, double timeCur);
+    virtual int  calcStiffnessAndResidual(vector<vector<double> >& node_coords, double* elemData, MatrixXdRM& Klocal, VectorXd& Flocal, double timeCur);
 
     virtual  int calcError(int index);
 };
