@@ -61,7 +61,7 @@ class SolverPetsc
 
     virtual int assembleMatrixAndVectorSerial(vector<int>& forAssyElem, MatrixXdRM& Klocal, VectorXd& Flocal);
 
-    virtual int assembleMatrixAndVectorParallel(vector<int>& forAssyElem, vector<int>& dof_map, MatrixXd& Klocal, VectorXd& Flocal);
+    virtual int assembleMatrixAndVectorParallel(vector<int>& forAssyElem, vector<int>& dof_map, MatrixXdRM& Klocal, VectorXd& Flocal);
 
     virtual int factorise();
 

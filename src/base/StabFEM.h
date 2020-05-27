@@ -38,18 +38,17 @@ class StabFEM
 
     public:
 
-        int  ndim, ndof, npElem, totalDOF;
+        int  ndim, ndof, npElem;
         int  nDBC, nFBC, nOutputFaceLoads, fileCount;
         int  stepsMax, outputFreq, tis;
         int  AlgoType;
 
-        PetscInt  nElem, nNode, nElem_local, nNode_local;
+        PetscInt  nElem_global, nNode_global, nElem_local, nNode_local, nNode_owned;
         PetscInt  n_mpi_procs, this_mpi_proc;
-        PetscInt  node_start, node_end;
-        PetscInt  row_start, row_end, ndofs_local;
-        PetscInt  elem_start, elem_end;
+        PetscInt  node_start, node_end, elem_start, elem_end;
+        PetscInt  row_start, row_end, ntotdofs_local, ntotdofs_global;
 
-        PetscErrorCode ierr, errpetsc;
+        PetscErrorCode  errpetsc;
 
         double  conv_tol, rhoInf, timeFinal, dt;
         double  elemData[50], timeData[50];
@@ -59,8 +58,12 @@ class StabFEM
         vector<vector<int> >     elemConn;                  //!< element-node connectivity array
 
         vector<int>  assyForSoln, OutputNodes;
-        vector<int>  node_map_new_to_old, node_map_old_to_new;
-        vector<int>  dof_map_new_to_old, dof_map_old_to_new;
+        vector<int>  node_map_get_old, node_map_get_new;
+        vector<int>  dof_map_get_old, dof_map_get_new;
+        vector<int>  elem_proc_id, node_proc_id;
+
+        vector<vector<int> >  NodeDofArrayOld, NodeDofArrayNew;
+        vector<vector<bool> >  NodeTypeOld, NodeTypeNew;
 
         vector<vector<double> >  DirichletBCs;          //!< Dirichlet BCs
         vector<vector<double> >  NeumannBCs;                //!< Neumann BCs
@@ -114,6 +117,10 @@ class StabFEM
         int   setSolver(int, int *parm = NULL, bool cIO = false);
 
         int   prepareMatrixPattern();
+
+        int   partitionMesh();
+
+        int   prepareDataForParallel();
 
         void  setTimeParam();
 

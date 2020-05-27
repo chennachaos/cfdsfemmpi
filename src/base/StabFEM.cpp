@@ -4,10 +4,9 @@
 #include "StabFEM.h"
 #include "KimMoinFlow.h"
 #include "UtilitiesGeneral.h"
-//#include "SolutionData.h"
-//#include "LagrangeElem2DNavierStokesTria3Node.h"
+#include "LagrangeElem2DNavierStokesTria3Node.h"
 #include "LagrangeElem2DNavierStokesQuad4Node.h"
-//#include "LagrangeElem3DNavierStokesTetra4Node.h"
+#include "LagrangeElem3DNavierStokesTetra4Node.h"
 //#include "LagrangeElem3DNavierStokesHexa8Node.h"
 
 
@@ -16,8 +15,11 @@ using namespace std;
 
 StabFEM::StabFEM()
 {
-    ndof = 0; nElem = 0; nNode = 0; npElem = 0; fileCount = 0;
-    totalDOF = 0;
+    MPI_Comm_size(MPI_COMM_WORLD, &n_mpi_procs);
+    MPI_Comm_rank(MPI_COMM_WORLD, &this_mpi_proc);
+
+    ndof = 0; nElem_global = 0; nNode_global = 0; npElem = 0; fileCount = 0;
+    ntotdofs_local = ntotdofs_global = 0;
 
     AlgoType = 2;
 
@@ -31,7 +33,7 @@ StabFEM::~StabFEM()
 {
     if(elems != NULL)
     {
-      for(int ii=0;ii<nElem;++ii)
+      for(int ii=0;ii<nElem_global;++ii)
         delete elems[ii];
 
       delete [] elems;
@@ -68,10 +70,10 @@ void  StabFEM::readInputData(string&  fname)
     infile >> stringVal >> npElem;
 
     // read number of nodes
-    infile >> stringVal >> nNode;
+    infile >> stringVal >> nNode_global;
 
     // read number of elements
-    infile >> stringVal >> nElem;
+    infile >> stringVal >> nElem_global;
 
     // read number of Dirichlet BCs
     infile >> stringVal >> nDBC;
@@ -83,34 +85,36 @@ void  StabFEM::readInputData(string&  fname)
     infile >> stringVal >> nOutputFaceLoads;
 
     cout << " ndim              =  " << ndim << endl;
-    cout << " nNode             =  " << nNode << endl;
-    cout << " nElem             =  " << nElem << endl;
+    cout << " ndof              =  " << ndof << endl;
+    cout << " nNode_global      =  " << nNode_global << endl;
+    cout << " nElem_global      =  " << nElem_global << endl;
     cout << " npElem            =  " << npElem << endl;
     cout << " nDBC              =  " << nDBC << endl;
     cout << " nFBC              =  " << nFBC << endl;
     cout << " nOutputFaceLoads  =  " << nOutputFaceLoads << endl;
+
 
     // read nodal coordinates
     ////////////////////////////////////////////
 
     cout << " reading nodes " << endl;
 
-    node_coords.resize(nNode);
-    for(ii=0; ii<nNode; ++ii)
+    node_coords.resize(nNode_global);
+    for(ii=0; ii<nNode_global; ++ii)
       node_coords[ii].resize(ndim);
 
     infile >> stringVal ;
     cout << " reading " << stringVal << endl;
     if(ndim == 2)
     {
-      for(ii=0; ii<nNode; ++ii)
+      for(ii=0; ii<nNode_global; ++ii)
       {
         infile >> tempDbl >> node_coords[ii][0] >> node_coords[ii][1] ;
       }
     }
     else
     {
-      for(ii=0; ii<nNode; ++ii)
+      for(ii=0; ii<nNode_global; ++ii)
       {
         infile >> tempDbl >> node_coords[ii][0] >> node_coords[ii][1] >> node_coords[ii][2];
       }
@@ -121,11 +125,11 @@ void  StabFEM::readInputData(string&  fname)
     infile >> stringVal ;
     cout << " reading " << stringVal << '\t' << npElem << endl;
 
-    elemConn.resize(nElem);
+    elemConn.resize(nElem_global);
 
     if(npElem == 3)
     {
-      for(int ee=0; ee<nElem; ++ee)
+      for(int ee=0; ee<nElem_global; ++ee)
       {
         elemConn[ee].resize(npElem);
 
@@ -139,7 +143,7 @@ void  StabFEM::readInputData(string&  fname)
     }
     else if(npElem == 4)
     {
-      for(int ee=0; ee<nElem; ++ee)
+      for(int ee=0; ee<nElem_global; ++ee)
       {
         elemConn[ee].resize(npElem);
 
@@ -151,7 +155,7 @@ void  StabFEM::readInputData(string&  fname)
     }
     else if(npElem == 8)
     {
-      for(int ee=0; ee<nElem; ++ee)
+      for(int ee=0; ee<nElem_global; ++ee)
       {
         elemConn[ee].resize(npElem);
 
@@ -223,7 +227,6 @@ void  StabFEM::readInputData(string&  fname)
     fout_convdata.setf(ios::fixed);
     fout_convdata.setf(ios::showpoint);
     fout_convdata.precision(14);
-
 
     cout << " Input files have been read successfully \n\n " << endl;
 
@@ -315,21 +318,21 @@ void StabFEM::prepareInputData()
     ///////////////////////////////////////////////////////////////////
 
     // create elements and prepare element data
-    elems = new ElementBase* [nElem];
+    elems = new ElementBase* [nElem_global];
 
-    for(ee=0;ee<nElem;++ee)
+    for(ee=0;ee<nElem_global;++ee)
     {
       if(ndim == 2)
       {
-        //if(npElem == 3)
-          //elems[ee] = new LagrangeElem2DNavierStokesTria3Node;
-        //else if(npElem == 4)
+        if(npElem == 3)
+          elems[ee] = new LagrangeElem2DNavierStokesTria3Node;
+        else if(npElem == 4)
           elems[ee] = new LagrangeElem2DNavierStokesQuad4Node;
       }
       else
       {
-        //if(npElem == 4)
-          //elems[ee] = new LagrangeElem3DNavierStokesTetra4Node;
+        if(npElem == 4)
+          elems[ee] = new LagrangeElem3DNavierStokesTetra4Node;
         //else if(npElem == 8)
           //elems[ee] = new LagrangeElem3DNavierStokesHexa8Node;
       }
@@ -350,11 +353,9 @@ void StabFEM::prepareInputData()
     //
     ///////////////////////////////////////////////////////////////////
 
-    SolnData.initialise(nNode*ndof);
+    SolnData.initialise(nNode_global*ndof);
 
     double  xx, yy, zz, fact;
-
-    cout << " aaaaaaaaaaaaaaa " << endl;
 
     Kovasznay analy;
 
@@ -410,7 +411,7 @@ void StabFEM::setInitialConditions()
 {
     double  xx=0.0, yy=0.0, zz=0.0, fact;
 
-    for(int ii=0; ii<nNode; ++ii)
+    for(int ii=0; ii<nNode_global; ++ii)
     {
         xx = node_coords[ii][0];
         yy = node_coords[ii][1];

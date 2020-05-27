@@ -44,11 +44,14 @@ int main(int argc, char* argv[])
 
     stabfem.prepareInputData();
 
-    stabfem.solveFullyImplicit();
+    //stabfem.partitionMesh();
 
-    //if( !infileOutput.empty() )
+    int parm[3];
+    stabfem.setSolver(1, parm, false);
 
-    //cout << " cccccccccccccc " << endl;
+    //stabfem.solveFullyImplicit();
+
+    stabfem.postProcess();
 
     cout << " Program is successful \n " << endl;
 

@@ -4,7 +4,7 @@
 #include "ElementBase.h"
 #include <chrono>
 #include "KimMoinFlow.h"
-
+#include "metis.h"
 
 
 int StabFEM::setSolver(int slv, int *parm, bool cIO)
@@ -45,59 +45,109 @@ int StabFEM::prepareMatrixPattern()
     PetscScalar  *arrayTemp;
     double  tstart, tend;
 
+    int ndomains = n_mpi_procs, subdomain=0;
+
+
     /////////////////////////////////////////////////////////////
     //
     // prepare the matrix pattern
     /////////////////////////////////////////////////////////////
 
-    vector<vector<int> >  ID;
-    vector<vector<bool> >  NodeType;
+    // set sizes of some data arrays
+    vector<bool>  vecBoolTempFalse(ndof, false);
+	  NodeTypeOld.resize(nNode_global, vecBoolTempFalse);
+    NodeTypeNew.resize(nNode_global, vecBoolTempFalse);
 
-    NodeType.resize(nNode);
-    ID.resize(nNode);
-
-    for(ii=0;ii<nNode;++ii)
-    {
-      NodeType[ii].resize(ndof);
-      ID[ii].resize(ndof);
-
-      for(jj=0;jj<ndof;++jj)
-      {
-        NodeType[ii][jj] = false;
-        ID[ii][jj] = -1;
-      }
-    }
+    vector<int>  vecIntTempM1(ndof, -1);
+    NodeDofArrayOld.resize(nNode_global, vecIntTempM1);
+    NodeDofArrayNew.resize(nNode_global, vecIntTempM1);
 
     // fix the specified Dirichlet BCs
     for(ii=0; ii<nDBC; ++ii)
     {
-      NodeType[DirichletBCs[ii][0]][DirichletBCs[ii][1]] = true;
+      NodeTypeOld[DirichletBCs[ii][0]][DirichletBCs[ii][1]] = true;
     }
 
-    totalDOF = 0;
-    for(ii=0;ii<nNode;++ii)
+    ntotdofs_global = 0;
+    for(ii=0;ii<nNode_global;++ii)
     {
       for(jj=0;jj<ndof;++jj)
       {
-        if(!NodeType[ii][jj])
+        if(!NodeTypeOld[ii][jj])
         {
-          ID[ii][jj] = totalDOF++;
-          assyForSoln.push_back(ii*ndof+jj);
+          NodeDofArrayOld[ii][jj] = ntotdofs_global++;
         }
       }
     }
 
     cout << " Mesh statistics .....\n" << endl;
-    cout << " nElem          = " << '\t' << nElem << endl;
-    cout << " nNode          = " << '\t' << nNode  << endl;
-    cout << " npElem         = " << '\t' << npElem << endl;
-    cout << " ndof           = " << '\t' << ndof << endl;
-    cout << " Total DOF      = " << '\t' << totalDOF << endl;
+    cout << " nElem_global     = " << '\t' << nElem_global << endl;
+    cout << " nNode_global     = " << '\t' << nNode_global  << endl;
+    cout << " npElem           = " << '\t' << npElem << endl;
+    cout << " ndof             = " << '\t' << ndof << endl;
+    cout << " ntotdofs_local   = " << '\t' << ntotdofs_local  << endl;
+    cout << " ntotdofs_global  = " << '\t' << ntotdofs_global << endl;
+    cout << " n_mpi_procs      = " << '\t' << n_mpi_procs << endl;
 
-    vector<vector<int> >  forAssyMat;
-    forAssyMat.resize(totalDOF);
+    node_map_get_old.resize(nNode_global, 0);
+    node_map_get_new.resize(nNode_global, 0);
 
-    for(ee=0; ee<nElem; ++ee)
+    dof_map_get_old.resize(ntotdofs_global, 0);
+    dof_map_get_new.resize(ntotdofs_global, 0);
+
+
+    if(n_mpi_procs == 1)
+    {
+        elem_start = 0;
+        elem_end   = nElem_global-1;
+
+        nElem_local = nElem_global;
+        nNode_local = nNode_global;
+        ntotdofs_local  = ntotdofs_global;
+
+        row_start = 0;
+        row_end   = ntotdofs_global-1;
+
+        for(ii=0; ii<nNode_global; ii++)
+        {
+          node_map_get_old[ii] = ii;
+          node_map_get_new[ii] = ii;
+        }
+        for(ii=0; ii<ntotdofs_global; ii++)
+        {
+          dof_map_get_old[ii] = ii;
+          dof_map_get_new[ii] = ii;
+        }
+
+        for(ii=0;ii<nNode_global;++ii)
+        {
+          NodeTypeNew[ii]     = NodeTypeOld[ii];
+          NodeDofArrayNew[ii] = NodeDofArrayOld[ii];
+        }
+    }
+    else
+    {
+        cout << "Before partitionMesh ... " << this_mpi_proc << endl; 
+        partitionMesh();
+        cout << "After partitionMesh ... " << this_mpi_proc << endl; 
+
+        errpetsc = MPI_Barrier(MPI_COMM_WORLD);
+
+        cout << "Before prepareDataForParallel ... " << this_mpi_proc << endl; 
+        prepareDataForParallel();
+        cout << "After prepareDataForParallel ... " << this_mpi_proc << endl; 
+
+        errpetsc = MPI_Barrier(MPI_COMM_WORLD);
+    }
+
+    SolnData.node_map_get_old = node_map_get_old;
+    SolnData.node_map_get_new = node_map_get_new;
+
+    errpetsc = MPI_Barrier(MPI_COMM_WORLD);
+
+    printf("\n aaaaaaaaaa \n\n");
+
+    for(ee=0; ee<nElem_global; ++ee)
     {
       npElem = elems[ee]->nodeNums.size();
 
@@ -113,76 +163,53 @@ int StabFEM::prepareMatrixPattern()
 
         for(jj=0;jj<ndof;++jj)
         {
-          elems[ee]->forAssyVec[ind+jj] = ID[kk][jj];
+          elems[ee]->forAssyVec[ind+jj] = NodeDofArrayNew[kk][jj];
         }
       }
+    }
 
-      //printVector(elems[ee]->forAssyVec);
-
-      tt1 = &(elems[ee]->forAssyVec[0]);
-
-      for(ii=0;ii<nsize;ii++)
+    assyForSoln.resize(ntotdofs_global);
+    ind = 0;
+    for(ii=0;ii<nNode_global;++ii)
+    {
+      for(jj=0;jj<ndof;++jj)
       {
-        r = tt1[ii];
-
-        if(r != -1)
+        if(NodeDofArrayNew[ii][jj] != -1)
         {
-          for(jj=0;jj<nsize;jj++)
-          {
-            if(tt1[jj] != -1)
-            {
-              //printf("ii.... %5d \t %5d \t %5d \t %5d \n",ii, jj, r, tt[jj]);
-              forAssyMat[r].push_back(tt1[jj]);
-            }
-          }
+          assyForSoln[ind++] = ii*ndof+jj;
         }
       }
     }
 
     printf("\n Preparing matrix pattern DONE \n\n");
-
-    bool pp=false;
-    //pp=true;
-    if(pp)
-    {
-       printf("   ID array \n\n");
-       for(ii=0;ii<nNode;++ii)
-       {
-          for(jj=0;jj<ndof;++jj)
-            cout << '\t' << ID[ii][jj];
-          cout << endl;
-       }
-       printf("\n\n\n");
-
-       printf("  assyForSoln array \n\n");
-       for(ii=0;ii<totalDOF;++ii)
-       {
-          cout << assyForSoln[ii] << endl;
-       }
-       printf("\n\n\n");
-    }
-
     printf("\n element DOF values initialised \n\n");
 
-    cout << " Total DOF   = " << '\t' << totalDOF << endl;
+    cout << " Total DOF   = " << '\t' << ntotdofs_local << '\t' << ntotdofs_global << endl;
 
+    PetscInt  *diag_nnz, *offdiag_nnz;
 
-    ndofs_local = totalDOF;
+    errpetsc  = PetscMalloc1(ntotdofs_local,  &diag_nnz);CHKERRQ(errpetsc);
+    errpetsc  = PetscMalloc1(ntotdofs_local,  &offdiag_nnz);CHKERRQ(errpetsc);
 
-    VectorXi  nnzVec(totalDOF);
-
-    nnz = 0;
-    for(ii=0;ii<totalDOF;ii++)
+    n1 = 50; n2 = 25;
+    if(ntotdofs_local < 50)
     {
-      findUnique(forAssyMat[ii]);
-      nnzVec[ii] = forAssyMat[ii].size();
-      nnz += nnzVec[ii];
+      n1 = ntotdofs_local;
+      n2 = n1;
+    }
+
+    cout << "n1, n2 = " <<  this_mpi_proc << '\t' << n1 << '\t' << n2 << endl;
+
+    for(ii=0; ii<ntotdofs_local; ii++)
+    {
+      diag_nnz[ii]    = n1;
+      offdiag_nnz[ii] = n2;
     }
 
     cout <<  " Initialising petsc solver " << endl;
 
     // Initialize the petsc solver
-    solverPetsc->initialise(totalDOF, totalDOF, &nnzVec[0], &nnzVec[0]);
+    solverPetsc->initialise(ntotdofs_local, ntotdofs_global, diag_nnz, offdiag_nnz);
 
 
     //Create parallel matrix, specifying only its global dimensions.
@@ -193,20 +220,24 @@ int StabFEM::prepareMatrixPattern()
     //preallocation of matrix memory is crucial for attaining good
     //performance. See the matrix chapter of the users manual for details.
 
+    PetscPrintf(PETSC_COMM_WORLD, " Initialise the Matrix pattern \n", errpetsc);
+
     ind = npElem*ndof;
     ind = ind*ind;
     PetscScalar  Klocal[ind];
     for(ii=0; ii<ind; ii++)  Klocal[ii] = 0.0;
 
     vector<int>  vecIntTemp;
-    for(ee=0; ee<nElem; ee++)
+    for(ee=0; ee<nElem_global; ee++)
     {
+      if(elem_proc_id[ee] == this_mpi_proc)
+      {
         size1 = elems[ee]->forAssyVec.size();
         vecIntTemp = elems[ee]->forAssyVec;
 
         errpetsc = MatSetValues(solverPetsc->mtx, size1, &vecIntTemp[0], size1, &vecIntTemp[0], Klocal, INSERT_VALUES);
+      }
     } //for(ee=0;)
-
 
     solverPetsc->currentStatus = PATTERN_OK;
 
@@ -216,13 +247,282 @@ int StabFEM::prepareMatrixPattern()
 }
 
 
+
+
+int StabFEM::partitionMesh()
+{
+    cout <<  "\n     StabFEM::partitionMesh()  .... STARTED ...\n" <<  endl;
+
+    elem_proc_id.resize(nElem_global);
+    node_proc_id.resize(nNode_global);
+
+    fill(elem_proc_id.begin(), elem_proc_id.end(), 0);
+    fill(node_proc_id.begin(), node_proc_id.end(), 0);
+
+    if( (n_mpi_procs == 1) )
+      return 0;
+
+    if(this_mpi_proc == 0)
+    {
+        int  ee, ii, jj, kk, n2;
+        int  nparts = n_mpi_procs, subdomain=0;
+    
+        /////////////////////////////////////////////////////////////////////////////
+        //
+        // Partition the mesh. Here, METIS is used.
+        // 
+        /////////////////////////////////////////////////////////////////////////////
+    
+        PetscInt  *eptr, *eind;
+    
+        errpetsc  = PetscMalloc1(nElem_global+1,  &eptr);CHKERRQ(errpetsc);
+        errpetsc  = PetscMalloc1(nElem_global*npElem,  &eind);CHKERRQ(errpetsc);
+
+        vector<int>  vecTemp2;
+    
+        eptr[0] = 0;
+        kk = 0;
+        for(ee=0; ee<nElem_global; ee++)
+        {
+            eptr[ee+1] = (ee+1)*npElem;
+    
+            //vecTemp2 = elems[ee]->nodeNums ;
+            vecTemp2 = elemConn[ee];
+            //printVector(vecTemp2);
+    
+            for(ii=0; ii<npElem; ii++)
+              eind[kk+ii] = vecTemp2[ii] ;
+    
+            kk += npElem;
+        }
+    
+        int  ncommon_nodes;
+        if(ndim == 2)
+          ncommon_nodes = 2;    // 3-noded tria or 4-noded quad
+        else
+        {
+          if(npElem == 4)       // 4-noded tetra element
+            ncommon_nodes = 3;
+          else
+            ncommon_nodes = 4;  // 8-noded hexa element
+        }
+    
+        idx_t objval;
+        idx_t options[METIS_NOPTIONS];
+    
+        METIS_SetDefaultOptions(options);
+    
+        // Specifies the partitioning method.
+        //options[METIS_OPTION_PTYPE] = METIS_PTYPE_RB;          // Multilevel recursive bisectioning.
+        options[METIS_OPTION_PTYPE] = METIS_PTYPE_KWAY;        // Multilevel k-way partitioning.
+    
+        //options[METIS_OPTION_NSEPS] = 10;
+    
+        //options[METIS_OPTION_OBJTYPE] = METIS_OBJTYPE_CUT;     // Edge-cut minimization
+        options[METIS_OPTION_OBJTYPE] = METIS_OBJTYPE_VOL;     // Total communication volume minimization
+    
+        options[METIS_OPTION_NUMBERING] = 0;  // C-style numbering is assumed that starts from 0.
+    
+        cout << " Executing METIS subroutine " << endl;
+    
+        // METIS partition routine
+        //int ret = METIS_PartMeshNodal(&nElem_global, &nNode_global, eptr, eind, NULL, NULL, &nparts, NULL, options, &objval, elem_proc_id, node_proc_id);
+        int ret = METIS_PartMeshDual(&nElem_global, &nNode_global, eptr, eind, NULL, NULL, &ncommon_nodes, &nparts, NULL, options, &objval, &elem_proc_id[0], &node_proc_id[0]);
+    
+        if(ret == METIS_OK)
+          cout << " METIS partition routine successful "  << endl;
+        else
+          cout << " METIS partition routine FAILED "  << endl;
+
+        errpetsc = PetscFree(eptr); CHKERRQ(errpetsc);
+        errpetsc = PetscFree(eind); CHKERRQ(errpetsc);
+
+        if( 1 < 0)
+        {
+          for(ee=0; ee<nNode_global; ee++)
+            cout << ee << '\t' << node_proc_id[ee] << endl;
+          cout << endl;  cout << endl;  cout << endl;
+
+          for(ee=0; ee<nElem_global; ee++)
+            cout << ee << '\t' << elem_proc_id[ee] << endl;
+          cout << endl;  cout << endl;  cout << endl;
+        }
+    }
+    MPI_Barrier(MPI_COMM_WORLD);
+
+    errpetsc = MPI_Bcast(&elem_proc_id[0], nElem_global, MPI_INT, 0, MPI_COMM_WORLD); CHKERRQ(errpetsc);
+    MPI_Barrier(MPI_COMM_WORLD);
+
+    errpetsc = MPI_Bcast(&node_proc_id[0], nNode_global, MPI_INT, 0, MPI_COMM_WORLD); CHKERRQ(errpetsc);
+    MPI_Barrier(MPI_COMM_WORLD);
+
+    for(int ee=0; ee<nElem_global; ee++)
+    {
+      elems[ee]->setSubdomainId(elem_proc_id[ee]);
+    }
+
+    cout <<  "\n     StabFEM::partitionMesh()  .... ENDED ...\n" <<  endl;
+
+    return 0;
+}
+
+
+int StabFEM::prepareDataForParallel()
+{
+      int n_subdomains = n_mpi_procs, subdomain=0, ee, ii, jj, kk, n1, n2, ind;
+
+      nElem_local = std::count(elem_proc_id.begin(), elem_proc_id.end(), this_mpi_proc);
+      cout << " nElem_local =  " << nElem_local << '\t' << this_mpi_proc << '\t' << n_mpi_procs << endl;
+
+      nNode_owned = std::count(node_proc_id.begin(), node_proc_id.end(), this_mpi_proc);
+      cout << " nNode_owned =  " << nNode_owned << '\t' << this_mpi_proc << '\t' << n_mpi_procs << endl;
+
+      MPI_Barrier(MPI_COMM_WORLD);
+
+      // find nodes local to each processor generate the list of locally owned nodes
+      std::vector<int>  nodelist_owned(nNode_owned);
+
+      kk=0;
+      for(ii=0; ii<nNode_global; ii++)
+      {
+        if( node_proc_id[ii] == this_mpi_proc )
+        {
+          nodelist_owned[kk++] = ii;
+        }
+      }
+      cout << " Locally owned nodes " << '\t' << this_mpi_proc << endl;
+      //printVector(nodelist_owned);
+
+      MPI_Barrier(MPI_COMM_WORLD);
+
+      // create the vector (of size n_mpi_procs)
+      // consisting of nNode_owned from all the processors in the communication
+      vector<int>  nNode_owned_vector(n_mpi_procs), nNode_owned_sum(n_mpi_procs);
+
+      MPI_Allgather(&nNode_owned, 1, MPI_INT, &nNode_owned_vector[0], 1, MPI_INT, MPI_COMM_WORLD);
+      //printVector(nNode_owned_vector);
+
+      // compute the numbers of first and last nodes in the local processor
+      nNode_owned_sum = nNode_owned_vector;
+      for(ii=1; ii<n_mpi_procs; ii++)
+      {
+        nNode_owned_sum[ii] += nNode_owned_sum[ii-1];
+      }
+      //printVector(nNode_owned_sum);
+      node_start = 0;
+      if(this_mpi_proc > 0)
+        node_start = nNode_owned_sum[this_mpi_proc-1];
+      node_end   = nNode_owned_sum[this_mpi_proc]-1;
+
+      cout << " node_start =  " << node_start << '\t' << node_end << '\t' << this_mpi_proc << endl;
+
+      MPI_Barrier(MPI_COMM_WORLD);
+
+      std::vector<int>  displs(n_mpi_procs);
+
+      displs[0] = 0;
+      for(ii=0; ii<n_mpi_procs-1; ii++)
+        displs[ii+1] = displs[ii] + nNode_owned_vector[ii];
+
+      // create a global list of nodelist_owned
+      // which will serve as a mapping from NEW node numbers to OLD node numbers
+      errpetsc = MPI_Allgatherv(&nodelist_owned[0], nNode_owned, MPI_INT, &node_map_get_old[0], &nNode_owned_vector[0], &displs[0], MPI_INT, MPI_COMM_WORLD);
+
+      // create an array for mapping from OLD node numbers to NEW node numbers
+      // Also, generate NodeTypeNew array for computing the local and global DOF size
+      // as well as creating the element-wise array for element matrix/vector assembly
+      for(ii=0; ii<nNode_global; ii++)
+      {
+        n1 = node_map_get_old[ii];
+        node_map_get_new[n1] = ii;
+
+        for(jj=0; jj<ndof; jj++)
+        {
+          NodeTypeNew[ii][jj] = NodeTypeOld[n1][jj];
+        }
+      }
+
+      // update elem<->node connectivity with new node numbers
+      for(ee=0; ee<nElem_global; ee++)
+      {
+          for(ii=0; ii<npElem; ii++)
+            elemConn[ee][ii] = node_map_get_new[elemConn[ee][ii]];
+
+          elems[ee]->nodeNums = elemConn[ee];
+      }
+
+      // update Dirichlet BC information with new node numbers
+      for(ii=0; ii<nDBC; ii++)
+      {
+          n1 = node_map_get_new[DirichletBCs[ii][0]];
+          DirichletBCs[ii][0] = n1;
+
+          NodeTypeNew[n1][jj] == true;
+      }
+
+      MPI_Barrier(MPI_COMM_WORLD);
+
+      // compute NodeDofArrayNew
+      ind = 0;
+      for(ii=0; ii<nNode_global; ii++)
+      {
+        for(jj=0; jj<ndof; jj++)
+        {
+          if(NodeTypeNew[ii][jj] == false)
+          {
+            NodeDofArrayNew[ii][jj] = ind++;
+          }
+        }
+      }
+
+      if(ind != ntotdofs_global)
+      {
+        cerr << "Something wrong with NodeDofArrayNew " << endl;
+        cout << "ind = " << ind << '\t' << ntotdofs_global << '\t' << this_mpi_proc << endl;
+      }
+
+      MPI_Barrier(MPI_COMM_WORLD);
+
+      // compute first and last row indices of the rows owned by the local processor
+      row_start  =  1e9;
+      row_end    = -1e9;
+      ntotdofs_local = 0;
+      for(ii=node_start; ii<=node_end; ii++)
+      {
+        for(jj=0; jj<ndof; jj++)
+        {
+          if(NodeTypeNew[ii][jj] == false)
+          {
+            ind = NodeDofArrayNew[ii][jj];
+            row_start  = min(row_start, ind);
+            row_end    = max(row_end,   ind);
+            ntotdofs_local++;
+          }
+        }
+      }
+
+      cout << "ntotdofs_local = " << ntotdofs_local << '\t' << ntotdofs_global << '\t' << this_mpi_proc << endl;
+
+      cout << "row_start  = " << row_start  << '\t' << row_end     << '\t' << this_mpi_proc << endl;
+
+      // check if the sum of local problem sizes is equal to that of global problem size
+      ind=0;
+      errpetsc = MPI_Allreduce(&ntotdofs_local, &ind, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+
+      if(ind != ntotdofs_global)
+      {
+        cerr << "Sum of local problem sizes is not equal to global size" << endl;
+        cout << "ind = " << ind << '\t' << ntotdofs_global << '\t' << this_mpi_proc << endl;
+      }
+
+  return 0;
+}
+
+
+
 int  StabFEM::solveFullyImplicit()
 {
     cout << " Solving with the Fully-Implicit Scheme " << endl;
-
-    int parm[3];
-
-    setSolver(1, parm, false);
 
     ///////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////
@@ -235,7 +535,7 @@ int  StabFEM::solveFullyImplicit()
     double  norm_rhs, fact, fact1, fact2;
     double  timeNow=dt, timeFact=0.0;
 
-    VectorXd  reacVec(nNode*ndof);
+    VectorXd  reacVec(nNode_global*ndof);
     VectorXd  TotalForce(3);
     ind = npElem*ndof;
     VectorXd  Flocal(ind);
@@ -250,7 +550,7 @@ int  StabFEM::solveFullyImplicit()
     //Time loop
     for(int tstep=0; tstep<stepsMax; tstep++)
     {
-        cout << " Time = " << timeNow << endl;
+        PetscPrintf(MPI_COMM_WORLD, " Time = %f \n", timeNow);
 
         SolnData.setTimeParam();
         SolnData.timeUpdate();
@@ -269,7 +569,7 @@ int  StabFEM::solveFullyImplicit()
 
         assignBoundaryConditions(timeNow, dt, timeFact);
 
-        cout << " Iteration loop " << endl;
+        PetscPrintf(MPI_COMM_WORLD, " Iteration loop \n");
         for(int iter=0; iter<10; iter++)
         {
             SolnData.updateIterStep();
@@ -282,8 +582,10 @@ int  StabFEM::solveFullyImplicit()
             //cout << " Element loop " << endl;
 
             // loop over elements and compute matrix and residual
-            for(ee=0; ee<nElem; ee++)
+            for(ee=0; ee<nElem_global; ee++)
             {
+              if(elems[ee]->getSubdomainId() == this_mpi_proc)
+              {
                 elems[ee]->calcStiffnessAndResidual(node_coords, elemData, Klocal, Flocal, timeNow);
 
                 size1 = elems[ee]->forAssyVec.size();
@@ -313,8 +615,11 @@ int  StabFEM::solveFullyImplicit()
 
                 //cout << "Assembling matrices and vectors " << endl;
                 solverPetsc->assembleMatrixAndVectorSerial(elems[ee]->forAssyVec, Klocal, Flocal);
-
+                //solverPetsc->assembleMatrixAndVectorParallel(elems[ee]->forAssyVec, dof_map_get_new, Klocal, Flocal);
+              } // if(elem_proc_id[ee] == this_proc_id)
             } //Element Loop
+
+            errpetsc = MPI_Barrier(MPI_COMM_WORLD);
 
             //cout << "Adding boundary conditions " << endl;
 
@@ -332,63 +637,93 @@ int  StabFEM::solveFullyImplicit()
               }
             }
 
+            errpetsc = MPI_Barrier(MPI_COMM_WORLD);
+
             VecAssemblyBegin(solverPetsc->rhsVec);
             VecAssemblyEnd(solverPetsc->rhsVec);
 
             VecNorm(solverPetsc->rhsVec, NORM_2, &norm_rhs);
             solverPetsc->currentStatus = ASSEMBLY_OK;
 
-            printf(" RHS norm = %E \n", norm_rhs);
+            PetscPrintf(MPI_COMM_WORLD, " RHS norm = %E \n", norm_rhs);
 
             if(norm_rhs < 1.0e-8)
             {
-                cout << " Solution converged below the specified tolerance " << endl;
+                PetscPrintf(MPI_COMM_WORLD, " Solution converged below the specified tolerance. \n\n");
                 break;
             }
             else
             {
-                cout << "Solving the matrix system " << endl;
+                PetscPrintf(MPI_COMM_WORLD, "Assembly done. Solving the matrix system. \n");
 
                 if( solverPetsc->factoriseAndSolve() )
                 {
-                  cerr << " PETSc solver not converged " << endl;
+                  PetscPrintf(MPI_COMM_WORLD, " PETSc solver not converged. \n\n");
                   return -1;
                 }
 
-                cout << "Adding the solution increment " << endl;
+                /////////////////////////////////////////////////////////////////////////////
+                // get the solution vector onto all the processors
+                /////////////////////////////////////////////////////////////////////////////
 
-                VecGetArray(solverPetsc->solnVec, &arrayTempSoln);
+                Vec            vec_SEQ;
+                VecScatter     ctx;
+
+                if(n_mpi_procs > 1)
+                {
+                  VecScatterCreateToAll(solverPetsc->solnVec, &ctx, &vec_SEQ);
+                  VecScatterBegin(ctx, solverPetsc->solnVec, vec_SEQ, INSERT_VALUES, SCATTER_FORWARD);
+                  VecScatterEnd(ctx, solverPetsc->solnVec, vec_SEQ, INSERT_VALUES, SCATTER_FORWARD);
+
+                  VecGetArray(vec_SEQ, &arrayTempSoln);
+                }
+                else
+                {
+                  VecGetArray(solverPetsc->solnVec, &arrayTempSoln);
+                }
+
+                // update solution vector
 
                 //printVector(rhsVec);
                 //printVector(solnVec);
 
-                for(ii=0; ii<totalDOF; ii++)
+                for(ii=0; ii<ntotdofs_global; ii++)
                 {
                   SolnData.soln[assyForSoln[ii]]   +=  arrayTempSoln[ii];
                 }
 
-                VecRestoreArray(solverPetsc->solnVec, &arrayTempSoln);
+                if(n_mpi_procs > 1)
+                {
+                  VecRestoreArray(vec_SEQ, &arrayTempSoln);
+                  VecScatterDestroy(&ctx);
+                  VecDestroy(&vec_SEQ);
+                }
+                else
+                {
+                  VecRestoreArray(solverPetsc->solnVec, &arrayTempSoln);
+                }
             }
         } //Iteration Loop
 
-
-        cout << "Postprocessing " << endl;
-        postProcess();
-
-        double TotalForce[3] = {0.0, 0.0, 0.0};
-        for(ii=0; ii<nOutputFaceLoads; ++ii)
+        PetscPrintf(MPI_COMM_WORLD, " Postprocessing... \n\n");
+        if(this_mpi_proc == 0)
         {
-          TotalForce[0] +=  reacVec[outputEdges[ii][0]*ndof];
-          TotalForce[1] +=  reacVec[outputEdges[ii][0]*ndof+1];
-        }
+            postProcess();
 
-        fout_convdata <<  timeNow << '\t' << TotalForce[0] << '\t' << TotalForce[1] << endl;
-        cout << endl; cout << endl;
+            double TotalForce[3] = {0.0, 0.0, 0.0};
+            for(ii=0; ii<nOutputFaceLoads; ++ii)
+            {
+              TotalForce[0] +=  reacVec[outputEdges[ii][0]*ndof];
+              TotalForce[1] +=  reacVec[outputEdges[ii][0]*ndof+1];
+            }
+    
+            fout_convdata <<  timeNow << '\t' << TotalForce[0] << '\t' << TotalForce[1] << endl;
+            cout << endl; cout << endl;
+        }
 
         //SolnData.solnPrev2    =  SolnData.solnPrev;
         //SolnData.solnPrev     =  SolnData.soln;
         //SolnData.solnDotPrev  =  SolnData.solnDot;
-
 
         timeNow = timeNow + dt;
 
@@ -438,7 +773,7 @@ void StabFEM::computeElementErrors(int ind)
     for(int index=0; index<4; index++)
     {
       totalError = 0.0;
-      for(int ee=0; ee<nElem; ee++)
+      for(int ee=0; ee<nElem_global; ee++)
       {
         //Compute the element force vector, including residual force
         //totalError += elems[ee]->CalculateError(node_coords, elemData, timeData, soln, solnDot, timeNow, index);

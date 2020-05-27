@@ -397,7 +397,7 @@ int SolverPetsc::assembleMatrixAndVectorSerial(vector<int>& forAssyElem, MatrixX
 
 
 
-int SolverPetsc::assembleMatrixAndVectorParallel(vector<int>& forAssyElem, vector<int>& dof_map, MatrixXd& Klocal, VectorXd& Flocal)
+int SolverPetsc::assembleMatrixAndVectorParallel(vector<int>& forAssyElem, vector<int>& dof_map, MatrixXdRM& Klocal, VectorXd& Flocal)
 {
   int ii, jj, r, kk=0;
 
