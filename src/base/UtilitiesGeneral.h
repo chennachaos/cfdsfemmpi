@@ -38,7 +38,8 @@ inline void printVector(vector<int>&  vec)
 {
     printf("\n\n");
     for(int ii=0;ii<vec.size();ii++)
-        printf("\t%6d ", vec[ii]);
+      //printf("\t%6d\t%d\n", ii, vec[ii]);
+      printf("\t%6d ", vec[ii]);
     printf("\n\n");
 
    return;

@@ -355,27 +355,6 @@ void StabFEM::prepareInputData()
 
     SolnData.initialise(nNode_global*ndof);
 
-    double  xx, yy, zz, fact;
-
-    Kovasznay analy;
-
-    SolnData.solnApplied.setZero();
-    for(ii=0; ii<nDBC; ++ii)
-    {
-        n1 = DirichletBCs[ii][0];
-        n2 = DirichletBCs[ii][1];
-
-        jj = n1*ndof+n2;
-
-        //xx = node_coords[n1][0] ;
-        //yy = node_coords[n1][1] ;
-
-        //DirichletBCsVelo[ii][2] = analy.computeValue(n2, xx, yy);
-
-        SolnData.solnApplied(jj) = DirichletBCs[ii][2];
-    }
-    //printVector(SolnData.solnApplied);
-
     printf("     StabFEM::prepareInputData()  .... FINISHED ...\n\n");
 
     return;

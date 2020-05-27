@@ -36,7 +36,7 @@ int StabFEM::prepareMatrixPattern()
     cout <<  "\n     StabFEM::prepareMatrixPattern()  .... STARTED ...\n" <<  endl;
 
     int  size1, size2, row, col;
-    int  tempDOF, domTemp, npElem, ind;
+    int  tempDOF, domTemp, ind;
     int  r, c, r1, c1, count=0, count1=0, count2=0, ii, jj, ee, dd, ind1, ind2, nsize;
     int  *tt1, *tt2, val1, val2, nnz, nnz_max_row, n1, n2, kk, e1, e2, ll, aa, bb, nn, dof;
     int  side, start1, start2, nr1, nr2;
@@ -391,7 +391,7 @@ int StabFEM::prepareDataForParallel()
         }
       }
       cout << " Locally owned nodes " << '\t' << this_mpi_proc << endl;
-      //printVector(nodelist_owned);
+      printVector(nodelist_owned);
 
       MPI_Barrier(MPI_COMM_WORLD);
 
@@ -568,6 +568,9 @@ int  StabFEM::solveFullyImplicit()
         //timeFact = 1.0;
 
         assignBoundaryConditions(timeNow, dt, timeFact);
+        if(this_mpi_proc == 0) printVector(SolnData.solnApplied);
+
+        MPI_Barrier(MPI_COMM_WORLD);
 
         PetscPrintf(MPI_COMM_WORLD, " Iteration loop \n");
         for(int iter=0; iter<10; iter++)
@@ -619,7 +622,7 @@ int  StabFEM::solveFullyImplicit()
               } // if(elem_proc_id[ee] == this_proc_id)
             } //Element Loop
 
-            errpetsc = MPI_Barrier(MPI_COMM_WORLD);
+            MPI_Barrier(MPI_COMM_WORLD);
 
             //cout << "Adding boundary conditions " << endl;
 
@@ -637,13 +640,17 @@ int  StabFEM::solveFullyImplicit()
               }
             }
 
-            errpetsc = MPI_Barrier(MPI_COMM_WORLD);
+            MPI_Barrier(MPI_COMM_WORLD);
 
             VecAssemblyBegin(solverPetsc->rhsVec);
             VecAssemblyEnd(solverPetsc->rhsVec);
 
             VecNorm(solverPetsc->rhsVec, NORM_2, &norm_rhs);
             solverPetsc->currentStatus = ASSEMBLY_OK;
+
+            MPI_Barrier(MPI_COMM_WORLD);
+
+            VecView(solverPetsc->rhsVec, PETSC_VIEWER_STDOUT_WORLD);
 
             PetscPrintf(MPI_COMM_WORLD, " RHS norm = %E \n", norm_rhs);
 
@@ -684,12 +691,18 @@ int  StabFEM::solveFullyImplicit()
 
                 // update solution vector
 
-                //printVector(rhsVec);
                 //printVector(solnVec);
 
                 for(ii=0; ii<ntotdofs_global; ii++)
                 {
                   SolnData.soln[assyForSoln[ii]]   +=  arrayTempSoln[ii];
+                }
+
+                if(this_mpi_proc == 0)
+                {
+                  printVector(SolnData.soln);
+                  //for(ii=0; ii<nNode_global; ii++)
+                    //cout << ii << '\t' << SolnData.soln[node_map_get_old[ii]] << endl;
                 }
 
                 if(n_mpi_procs > 1)

@@ -49,9 +49,9 @@ int main(int argc, char* argv[])
     int parm[3];
     stabfem.setSolver(1, parm, false);
 
-    //stabfem.solveFullyImplicit();
+    stabfem.solveFullyImplicit();
 
-    stabfem.postProcess();
+    //stabfem.postProcess();
 
     cout << " Program is successful \n " << endl;
 

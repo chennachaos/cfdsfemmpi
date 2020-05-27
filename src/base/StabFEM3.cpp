@@ -27,7 +27,8 @@ void  StabFEM::postProcess()
 
     vtkSmartPointer<vtkFloatArray>           vecVTK       =  vtkSmartPointer<vtkFloatArray>::New();
     vtkSmartPointer<vtkFloatArray>           scaVTK       =  vtkSmartPointer<vtkFloatArray>::New();
-    vtkSmartPointer<vtkFloatArray>           procIdVTK    =  vtkSmartPointer<vtkFloatArray>::New();
+    vtkSmartPointer<vtkFloatArray>           procIdVTKnode =  vtkSmartPointer<vtkFloatArray>::New();
+    vtkSmartPointer<vtkFloatArray>           procIdVTKcell =  vtkSmartPointer<vtkFloatArray>::New();
 
     vtkSmartPointer<vtkXMLUnstructuredGridWriter>  writerUGridVTK =  vtkSmartPointer<vtkXMLUnstructuredGridWriter>::New();
 
@@ -42,8 +43,11 @@ void  StabFEM::postProcess()
     scaVTK->SetName("pressure");
     scaVTK->SetNumberOfTuples(nNode_global);
 
-    procIdVTK->SetName("procId");
-    procIdVTK->SetNumberOfTuples(nElem_global);
+    procIdVTKcell->SetName("procId");
+    procIdVTKcell->SetNumberOfTuples(nElem_global);
+
+    procIdVTKnode->SetName("procId");
+    procIdVTKnode->SetNumberOfTuples(nNode_global);
 
     vtkIdType pt[10];
 
@@ -52,6 +56,8 @@ void  StabFEM::postProcess()
       for(ii=0; ii<nNode_global; ii++)
       {
         pt[0] = pointsVTK->InsertNextPoint(node_coords[ii][0], node_coords[ii][1], 0.0);
+
+        procIdVTKnode->InsertTuple1(ii, node_proc_id[ii]);
 
         nn = node_map_get_new[ii];
         kk = nn*ndof;
@@ -66,7 +72,7 @@ void  StabFEM::postProcess()
 
       for(ee=0; ee<nElem_global; ee++)
       {
-        procIdVTK->SetTuple1(ee, elems[ee]->getSubdomainId());
+        procIdVTKcell->SetTuple1(ee, elems[ee]->getSubdomainId());
 
         npElem = elemConn[ee].size();
 
@@ -105,7 +111,7 @@ void  StabFEM::postProcess()
 
       for(ee=0; ee<nElem_global; ee++)
       {
-        procIdVTK->SetTuple1(ee, elems[ee]->getSubdomainId());
+        procIdVTKcell->SetTuple1(ee, elems[ee]->getSubdomainId());
 
         npElem = elemConn[ee].size();
 
@@ -121,9 +127,10 @@ void  StabFEM::postProcess()
 
     uGridVTK->SetPoints(pointsVTK);
     uGridVTK->GetPointData()->SetScalars(scaVTK);
+    uGridVTK->GetPointData()->AddArray(procIdVTKnode);
     uGridVTK->GetPointData()->SetVectors(vecVTK);
 
-    uGridVTK->GetCellData()->SetScalars(procIdVTK);
+    uGridVTK->GetCellData()->SetScalars(procIdVTKcell);
 
     //Write the file.
 
