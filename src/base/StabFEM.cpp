@@ -340,8 +340,7 @@ void StabFEM::prepareInputData()
       elems[ee]->SolnData = &(SolnData);
 
       elems[ee]->nodeNums = elemConn[ee];
-
-      elems[ee]->prepareElemData(node_coords);
+      //elems[ee]->prepareElemData(node_coords);
     }
 
 

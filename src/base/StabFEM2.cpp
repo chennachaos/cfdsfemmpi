@@ -149,6 +149,8 @@ int StabFEM::prepareMatrixPattern()
 
     for(ee=0; ee<nElem_global; ++ee)
     {
+      elems[ee]->prepareElemData(node_coords);
+
       npElem = elems[ee]->nodeNums.size();
 
       nsize = ndof*npElem;
@@ -391,7 +393,7 @@ int StabFEM::prepareDataForParallel()
         }
       }
       cout << " Locally owned nodes " << '\t' << this_mpi_proc << endl;
-      printVector(nodelist_owned);
+      //printVector(nodelist_owned);
 
       MPI_Barrier(MPI_COMM_WORLD);
 
@@ -436,10 +438,10 @@ int StabFEM::prepareDataForParallel()
         n1 = node_map_get_old[ii];
         node_map_get_new[n1] = ii;
 
-        for(jj=0; jj<ndof; jj++)
-        {
-          NodeTypeNew[ii][jj] = NodeTypeOld[n1][jj];
-        }
+        //for(jj=0; jj<ndof; jj++)
+        //{
+          //NodeTypeNew[ii][jj] = NodeTypeOld[n1][jj];
+        //}
       }
 
       // update elem<->node connectivity with new node numbers
@@ -457,7 +459,7 @@ int StabFEM::prepareDataForParallel()
           n1 = node_map_get_new[DirichletBCs[ii][0]];
           DirichletBCs[ii][0] = n1;
 
-          NodeTypeNew[n1][jj] == true;
+          NodeTypeNew[n1][DirichletBCs[ii][1]] = true;
       }
 
       MPI_Barrier(MPI_COMM_WORLD);
@@ -541,6 +543,8 @@ int  StabFEM::solveFullyImplicit()
     VectorXd  Flocal(ind);
     MatrixXdRM  Klocal(ind, ind);
     PetscScalar *arrayTempSoln;
+    Vec            vec_SEQ;
+    VecScatter     ctx;
 
     //KimMoinFlowUnsteadyNavierStokes  analy(elemData[0], elemData[1], 1.0);
 
@@ -568,7 +572,7 @@ int  StabFEM::solveFullyImplicit()
         //timeFact = 1.0;
 
         assignBoundaryConditions(timeNow, dt, timeFact);
-        if(this_mpi_proc == 0) printVector(SolnData.solnApplied);
+        //if(this_mpi_proc == 0) printVector(SolnData.solnApplied);
 
         MPI_Barrier(MPI_COMM_WORLD);
 
@@ -581,6 +585,8 @@ int  StabFEM::solveFullyImplicit()
             solverPetsc->zeroMtx();
 
             reacVec.setZero();
+
+            MPI_Barrier(MPI_COMM_WORLD);
 
             //cout << " Element loop " << endl;
 
@@ -650,7 +656,7 @@ int  StabFEM::solveFullyImplicit()
 
             MPI_Barrier(MPI_COMM_WORLD);
 
-            VecView(solverPetsc->rhsVec, PETSC_VIEWER_STDOUT_WORLD);
+            //VecView(solverPetsc->rhsVec, PETSC_VIEWER_STDOUT_WORLD);
 
             PetscPrintf(MPI_COMM_WORLD, " RHS norm = %E \n", norm_rhs);
 
@@ -672,9 +678,6 @@ int  StabFEM::solveFullyImplicit()
                 /////////////////////////////////////////////////////////////////////////////
                 // get the solution vector onto all the processors
                 /////////////////////////////////////////////////////////////////////////////
-
-                Vec            vec_SEQ;
-                VecScatter     ctx;
 
                 if(n_mpi_procs > 1)
                 {
@@ -700,7 +703,7 @@ int  StabFEM::solveFullyImplicit()
 
                 if(this_mpi_proc == 0)
                 {
-                  printVector(SolnData.soln);
+                  //printVector(SolnData.soln);
                   //for(ii=0; ii<nNode_global; ii++)
                     //cout << ii << '\t' << SolnData.soln[node_map_get_old[ii]] << endl;
                 }

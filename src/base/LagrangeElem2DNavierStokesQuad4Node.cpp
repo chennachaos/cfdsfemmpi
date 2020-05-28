@@ -44,11 +44,11 @@ void LagrangeElem2DNavierStokesQuad4Node::prepareElemData(vector<vector<double> 
     double xNode[npElem], yNode[npElem], xx, yy;
     for(ii=0;ii<npElem;ii++)
     {
-      //xNode[ii] = GeomData->NodePosOrig[SolnData->node_map_new_to_old[nodeNums[ii]]][0];
-      //yNode[ii] = GeomData->NodePosOrig[SolnData->node_map_new_to_old[nodeNums[ii]]][1];
+      xNode[ii] = node_coords[SolnData->node_map_get_old[nodeNums[ii]]][0];
+      yNode[ii] = node_coords[SolnData->node_map_get_old[nodeNums[ii]]][1];
 
-      xNode[ii] = node_coords[nodeNums[ii]][0];
-      yNode[ii] = node_coords[nodeNums[ii]][1];
+      //xNode[ii] = node_coords[nodeNums[ii]][0];
+      //yNode[ii] = node_coords[nodeNums[ii]][1];
     }
 
     // Gauss point coordinates and weights
