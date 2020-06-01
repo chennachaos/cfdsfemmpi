@@ -21,20 +21,10 @@ using namespace std;
 
 int main(int argc, char* argv[])
 {
-    //Set the input file name
-    //The file name is specified from the command line
-    if(argc == 0)
-    {
-        cerr << " Error in input data " << endl;
-        cerr << " You must enter name of input file" << endl;
-        cerr << " Aborting..." << endl;
-    }
-
     PetscInitialize(NULL, NULL, "petsc_options.dat", NULL);
 
-    string  meshfile = argv[1];
-    string  controlfile = argv[2];
-
+    string  meshfile = "../testdata/ldc2dquad10/LDC2Dquad10";
+    string  controlfile = "../testdata/ldc2dquad10/control-parameters-ldc-Re100.dat";
 
     StabFEM  stabfem;
 
@@ -51,12 +41,18 @@ int main(int argc, char* argv[])
 
     stabfem.solveFullyImplicit();
 
-    string  outputfile = "solution.dat";
-    stabfem.writeResult(outputfile);
+    PetscPrintf(MPI_COMM_WORLD, " Simulation is completed. ... Checking the solution... \n ");
 
-    //stabfem.postProcess();
+    string  resultfile = "../testdata/ldc2dquad10/test-ldc-stru-nelem10-ref.dat";
 
-    PetscPrintf(MPI_COMM_WORLD, " Program is successful \n ");
+    if(stabfem.checkResult(resultfile) != 0)
+    {
+      PetscPrintf(MPI_COMM_WORLD, "\n\n\n Result does not match \n\n\n");
+      return 1;
+    }
+    PetscPrintf(MPI_COMM_WORLD, "\n\n\n Result matches \n\n\n");
+
+    PetscPrintf(MPI_COMM_WORLD, "\n\n\n Test is successful \n\n\n ");
 
     PetscFinalize(); //CHKERRQ(ierr);
 

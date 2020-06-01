@@ -95,6 +95,11 @@ int StabFEM::prepareMatrixPattern()
     dof_map_get_old.resize(ntotdofs_global, 0);
     dof_map_get_new.resize(ntotdofs_global, 0);
 
+    elem_proc_id.resize(nElem_global);
+    node_proc_id.resize(nNode_global);
+
+    fill(elem_proc_id.begin(), elem_proc_id.end(), 0);
+    fill(node_proc_id.begin(), node_proc_id.end(), 0);
 
     if(n_mpi_procs == 1)
     {
@@ -222,7 +227,7 @@ int StabFEM::prepareMatrixPattern()
     //preallocation of matrix memory is crucial for attaining good
     //performance. See the matrix chapter of the users manual for details.
 
-    PetscPrintf(PETSC_COMM_WORLD, " Initialise the Matrix pattern \n", errpetsc);
+    PetscPrintf(MPI_COMM_WORLD, " Initialise the Matrix pattern \n", errpetsc);
 
     ind = npElem*ndof;
     ind = ind*ind;
@@ -253,16 +258,7 @@ int StabFEM::prepareMatrixPattern()
 
 int StabFEM::partitionMesh()
 {
-    cout <<  "\n     StabFEM::partitionMesh()  .... STARTED ...\n" <<  endl;
-
-    elem_proc_id.resize(nElem_global);
-    node_proc_id.resize(nNode_global);
-
-    fill(elem_proc_id.begin(), elem_proc_id.end(), 0);
-    fill(node_proc_id.begin(), node_proc_id.end(), 0);
-
-    if( (n_mpi_procs == 1) )
-      return 0;
+    PetscPrintf(MPI_COMM_WORLD, "\n     StabFEM::partitionMesh()  .... STARTED ...\n");
 
     if(this_mpi_proc == 0)
     {
@@ -363,7 +359,7 @@ int StabFEM::partitionMesh()
       elems[ee]->setSubdomainId(elem_proc_id[ee]);
     }
 
-    cout <<  "\n     StabFEM::partitionMesh()  .... ENDED ...\n" <<  endl;
+    PetscPrintf(MPI_COMM_WORLD, "\n     StabFEM::partitionMesh()  .... FINISHED ...\n");
 
     return 0;
 }
@@ -524,7 +520,7 @@ int StabFEM::prepareDataForParallel()
 
 int  StabFEM::solveFullyImplicit()
 {
-    cout << " Solving with the Fully-Implicit Scheme " << endl;
+    PetscPrintf(MPI_COMM_WORLD, " Solving with the Fully-Implicit Scheme \n\n\n");
 
     ///////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////
@@ -558,6 +554,7 @@ int  StabFEM::solveFullyImplicit()
 
         SolnData.setTimeParam();
         SolnData.timeUpdate();
+
         //
         if(timeNow <= 1.0)
         {
@@ -581,14 +578,13 @@ int  StabFEM::solveFullyImplicit()
         {
             SolnData.updateIterStep();
 
-            //cout << " Zeroing the solver " << endl;
             solverPetsc->zeroMtx();
 
             reacVec.setZero();
 
             MPI_Barrier(MPI_COMM_WORLD);
 
-            //cout << " Element loop " << endl;
+            //PetscPrintf(MPI_COMM_WORLD, "\n Element loop \n");
 
             // loop over elements and compute matrix and residual
             for(ee=0; ee<nElem_global; ee++)
@@ -599,7 +595,7 @@ int  StabFEM::solveFullyImplicit()
 
                 size1 = elems[ee]->forAssyVec.size();
 
-                //cout << "Applying boundary conditions " << ee << endl;
+                //PetscPrintf(MPI_COMM_WORLD, "\n Applying boundary conditions %d \n ", ee);
                 if(iter == 0)
                 {
                     // apply boundary conditions
@@ -622,15 +618,14 @@ int  StabFEM::solveFullyImplicit()
                     }
                 } // if(iter == 0)
 
-                //cout << "Assembling matrices and vectors " << endl;
+                //PetscPrintf(MPI_COMM_WORLD, "\n Assembling matrices and vectors \n");
                 solverPetsc->assembleMatrixAndVectorSerial(elems[ee]->forAssyVec, Klocal, Flocal);
-                //solverPetsc->assembleMatrixAndVectorParallel(elems[ee]->forAssyVec, dof_map_get_new, Klocal, Flocal);
               } // if(elem_proc_id[ee] == this_proc_id)
             } //Element Loop
 
             MPI_Barrier(MPI_COMM_WORLD);
 
-            //cout << "Adding boundary conditions " << endl;
+            //PetscPrintf(MPI_COMM_WORLD, "\n Adding boundary conditions \n");
 
             // add boundary conditions
             if(iter == 0)
@@ -693,19 +688,9 @@ int  StabFEM::solveFullyImplicit()
                 }
 
                 // update solution vector
-
-                //printVector(solnVec);
-
                 for(ii=0; ii<ntotdofs_global; ii++)
                 {
                   SolnData.soln[assyForSoln[ii]]   +=  arrayTempSoln[ii];
-                }
-
-                if(this_mpi_proc == 0)
-                {
-                  //printVector(SolnData.soln);
-                  //for(ii=0; ii<nNode_global; ii++)
-                    //cout << ii << '\t' << SolnData.soln[node_map_get_old[ii]] << endl;
                 }
 
                 if(n_mpi_procs > 1)
@@ -737,17 +722,12 @@ int  StabFEM::solveFullyImplicit()
             cout << endl; cout << endl;
         }
 
-        //SolnData.solnPrev2    =  SolnData.solnPrev;
-        //SolnData.solnPrev     =  SolnData.soln;
-        //SolnData.solnDotPrev  =  SolnData.solnDot;
-
         timeNow = timeNow + dt;
 
         if(timeNow > timeFinal)
           break;
  
     } //Time loop
-
 
     return 0;
 }

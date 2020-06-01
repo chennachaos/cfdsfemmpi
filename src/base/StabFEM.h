@@ -106,7 +106,11 @@ class StabFEM
 
         void  writeNodalData();
 
-        void  writeReadResult(int, string&);
+        int  writeResult(string&);
+
+        int  readResult(string&);
+
+        int  checkResult(string&);
 
         ///////////////////////////////////////////////////////////
         //

@@ -8,7 +8,7 @@ void  StabFEM::postProcess()
     if(this_mpi_proc != 0)
       return;
 
-    //cout << " StabFEM::postProcess " << endl;
+    PetscPrintf(MPI_COMM_WORLD, " \n StabFEM::postProcess \n");
 
     //
     // setup and write vtk data

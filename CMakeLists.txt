@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.6)
-project(igampap)
+project(cfdsfemmpi)
 
 enable_language(CXX)
 
@@ -82,10 +82,21 @@ file(GLOB sources2 src/base/*.cpp)
 
 
 add_executable(cfdsfemmpi       src/cfdsfemmpi.cpp ${sources1} ${sources2})
+add_executable(test-ldc-stru-nelem10    src/test-ldc-stru-nelem10.cpp ${sources1} ${sources2})
+add_executable(test-ldc-stru-mesh2    src/test-ldc-stru-mesh2.cpp ${sources1} ${sources2})
 
-target_link_libraries(cfdsfemmpi stdc++ m superlu  blas lapack    metis parmetis  petsc  mpi  mpi_cxx  vtkCommonCore-6.3  vtkIOCore-6.3  vtkIOGeometry-6.3  vtkIOXML-6.3  vtkIOImage-6.3  vtkIOExport-6.3   vtkRenderingCore-6.3  vtkFiltersCore-6.3  vtkFiltersGeneral-6.3   vtkFiltersModeling-6.3  vtkFiltersSources-6.3  vtkRenderingAnnotation-6.3  vtkRenderingVolume-6.3  vtkRenderingVolumeOpenGL-6.3  vtkInteractionStyle-6.3  vtkCommonExecutionModel-6.3  vtkCommonDataModel-6.3  vtkFiltersExtraction-6.3  vtkRenderingFreeType-6.3  vtkRenderingOpenGL-6.3  vtkIOParallel-6.3  vtkIOParallelXML-6.3)
 
+target_link_libraries(cfdsfemmpi stdc++ m superlu  blas lapack    metis  petsc  mpi  mpi_cxx  vtkCommonCore-6.3  vtkIOCore-6.3  vtkIOGeometry-6.3  vtkIOXML-6.3  vtkIOImage-6.3  vtkIOExport-6.3   vtkRenderingCore-6.3  vtkFiltersCore-6.3  vtkFiltersGeneral-6.3   vtkFiltersModeling-6.3  vtkFiltersSources-6.3  vtkRenderingAnnotation-6.3  vtkRenderingVolume-6.3  vtkRenderingVolumeOpenGL-6.3  vtkInteractionStyle-6.3  vtkCommonExecutionModel-6.3  vtkCommonDataModel-6.3  vtkFiltersExtraction-6.3  vtkRenderingFreeType-6.3  vtkRenderingOpenGL-6.3  vtkIOParallel-6.3  vtkIOParallelXML-6.3)
+target_link_libraries(test-ldc-stru-nelem10 stdc++ m superlu  blas lapack    metis  petsc  mpi  mpi_cxx  vtkCommonCore-6.3  vtkIOCore-6.3  vtkIOGeometry-6.3  vtkIOXML-6.3  vtkIOImage-6.3  vtkIOExport-6.3   vtkRenderingCore-6.3  vtkFiltersCore-6.3  vtkFiltersGeneral-6.3   vtkFiltersModeling-6.3  vtkFiltersSources-6.3  vtkRenderingAnnotation-6.3  vtkRenderingVolume-6.3  vtkRenderingVolumeOpenGL-6.3  vtkInteractionStyle-6.3  vtkCommonExecutionModel-6.3  vtkCommonDataModel-6.3  vtkFiltersExtraction-6.3  vtkRenderingFreeType-6.3  vtkRenderingOpenGL-6.3  vtkIOParallel-6.3  vtkIOParallelXML-6.3)
+target_link_libraries(test-ldc-stru-mesh2 stdc++ m superlu  blas lapack    metis  petsc  mpi  mpi_cxx  vtkCommonCore-6.3  vtkIOCore-6.3  vtkIOGeometry-6.3  vtkIOXML-6.3  vtkIOImage-6.3  vtkIOExport-6.3   vtkRenderingCore-6.3  vtkFiltersCore-6.3  vtkFiltersGeneral-6.3   vtkFiltersModeling-6.3  vtkFiltersSources-6.3  vtkRenderingAnnotation-6.3  vtkRenderingVolume-6.3  vtkRenderingVolumeOpenGL-6.3  vtkInteractionStyle-6.3  vtkCommonExecutionModel-6.3  vtkCommonDataModel-6.3  vtkFiltersExtraction-6.3  vtkRenderingFreeType-6.3  vtkRenderingOpenGL-6.3  vtkIOParallel-6.3  vtkIOParallelXML-6.3)
 
 install(TARGETS  cfdsfemmpi  RUNTIME DESTINATION /home/chenna/Documents/myCode/cfdsfemmpi/bin)
+install(TARGETS  test-ldc-stru-nelem10  RUNTIME DESTINATION /home/chenna/Documents/myCode/cfdsfemmpi/bin)
+install(TARGETS  test-ldc-stru-mesh2  RUNTIME DESTINATION /home/chenna/Documents/myCode/cfdsfemmpi/bin)
+
+
+
+#enable_testing()
+#add_subdirectory(tests)
 
 

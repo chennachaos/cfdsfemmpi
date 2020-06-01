@@ -427,3 +427,123 @@ void StabFEM::writeNodalData()
 
 
 
+int  StabFEM::writeResult(string&  fname)
+{
+    ofstream fout(fname);
+
+    if(fout.fail())
+    {
+       cout << " Could not open the file in 'StabFEM::writeResult' ... " << endl;
+       exit(1);
+    }
+
+    fout.setf(ios::fixed);
+    fout.setf(ios::showpoint);
+    fout.precision(8);
+
+    fout << nNode_global <<endl;
+
+    int  ii, nn, ind;
+    if(ndim == 2)
+    {
+      for(int ii=0; ii<nNode_global; ii++)
+      {
+        ind = node_map_get_new[ii]*ndof;
+        fout << SolnData.soln[ind] << '\t' << SolnData.soln[ind+1] << '\t' << SolnData.soln[ind+2] << endl;
+      }
+    }
+    else
+    {
+      for(int ii=0; ii<nNode_global; ii++)
+      {
+        ind = node_map_get_new[ii]*ndof;
+        fout << SolnData.soln[ind] << '\t' << SolnData.soln[ind+1] << '\t' << SolnData.soln[ind+2] << '\t' << SolnData.soln[ind+3] << endl;
+      }
+    }
+
+    fout.close();
+
+    return  0;
+}
+
+
+
+
+
+
+int  StabFEM::checkResult(string&  fname)
+{
+    std::ifstream  datfile(fname);
+
+    if(datfile.fail())
+    {
+        cout << " Could not open the file in 'StabFEM::checkResult' ... " << endl;
+        exit(1);
+    }
+
+    string  line, stringVal, stringVec[10];
+    double  tempDbl;
+
+    int  nnodes, ii, ind;
+    // read number of nodes
+    datfile  >>  nnodes;
+    if(nnodes != nNode_global)
+      return  -1;
+
+    double  val[ndof];
+    bool  flag = true;
+    if(ndim == 2)
+    {
+      for(ii=0; ii<nNode_global; ++ii)
+      {
+        datfile >> val[0] >> val[1] >> val[2];
+        //cout << val[0] << '\t' << val[1] << '\t' << val[2] << endl;
+
+        ind = node_map_get_new[ii]*ndof;
+        val[0] -= SolnData.soln[ind];
+        val[1] -= SolnData.soln[ind+1];
+        val[2] -= SolnData.soln[ind+2];
+
+        if( sqrt(val[0]*val[0] + val[1]*val[1] + val[2]*val[2]) > 1.0e-4)
+        {
+          flag = false;
+          break;
+        }
+      }
+    }
+    else
+    {
+      for(ii=0; ii<nNode_global; ++ii)
+      {
+        datfile >> val[0] >> val[1] >> val[2] >> val[3];
+      }
+    }
+
+    datfile.close();
+    if(!flag)
+      return -2;
+
+    return  0;
+}
+
+
+
+
+int  StabFEM::readResult(string&  fname)
+{
+    ofstream fout(fname);
+
+    if(fout.fail())
+    {
+       cout << " Could not open the file in 'StabFEM::readResult' ... " << endl;
+       exit(1);
+    }
+
+    fout.setf(ios::fixed);
+    fout.setf(ios::showpoint);
+    fout.precision(8);
+
+
+  return  0;
+}
+

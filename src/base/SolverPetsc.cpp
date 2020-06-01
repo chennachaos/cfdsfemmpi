@@ -125,15 +125,21 @@ int SolverPetsc::initialise(int size_local, int size_global, int* diag_nnz, int*
     //  KSPSetInitialGuessNonzero(ksp, PETSC_TRUE);
     //  KSPSetInitialGuessNonzero(ksp, PETSC_FALSE);
 
+    cout << "Setting KSP context from input file" << endl;
+
     // Set KSP options from the input file
     // This is convenient as it allows to choose different options
     // from the input files instead of recompiling the code
     errpetsc = KSPSetFromOptions(ksp);
     CHKERRQ(errpetsc);
 
+    cout << "Creating PC context" << endl;
+
     // Get the PC context
     errpetsc = KSPGetPC(ksp, &pc);
     CHKERRQ(errpetsc);
+
+    cout << "Setting PC context from input file" << endl;
 
     // Set PC options from the input file
     errpetsc = PCSetFromOptions(pc);
