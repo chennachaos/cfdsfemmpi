@@ -111,7 +111,7 @@ int SolverPetsc::initialise(int size_local, int size_global, int* diag_nnz, int*
     errpetsc = MatSetOption(mtx, MAT_KEEP_NONZERO_PATTERN, PETSC_TRUE);
     CHKERRQ(errpetsc);
 
-    cout << "Creating KSP context" << endl;
+    PetscPrintf(MPI_COMM_WORLD, "\n\n Creating KSP context ... \n\n");
 
     // Create the KSP context
     errpetsc = KSPCreate(PETSC_COMM_WORLD, &ksp);
@@ -125,7 +125,7 @@ int SolverPetsc::initialise(int size_local, int size_global, int* diag_nnz, int*
     //  KSPSetInitialGuessNonzero(ksp, PETSC_TRUE);
     //  KSPSetInitialGuessNonzero(ksp, PETSC_FALSE);
 
-    cout << "Setting KSP context from input file" << endl;
+    PetscPrintf(MPI_COMM_WORLD, "\n\n Setting KSP context from input file ... \n\n");
 
     // Set KSP options from the input file
     // This is convenient as it allows to choose different options
@@ -133,13 +133,13 @@ int SolverPetsc::initialise(int size_local, int size_global, int* diag_nnz, int*
     errpetsc = KSPSetFromOptions(ksp);
     CHKERRQ(errpetsc);
 
-    cout << "Creating PC context" << endl;
+    PetscPrintf(MPI_COMM_WORLD, "\n\n Creating PC context ... \n\n");
 
     // Get the PC context
     errpetsc = KSPGetPC(ksp, &pc);
     CHKERRQ(errpetsc);
 
-    cout << "Setting PC context from input file" << endl;
+    PetscPrintf(MPI_COMM_WORLD, "\n\n Setting PC context from input file ... \n\n");
 
     // Set PC options from the input file
     errpetsc = PCSetFromOptions(pc);

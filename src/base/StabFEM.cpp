@@ -46,7 +46,7 @@ StabFEM::~StabFEM()
 
 void  StabFEM::readInputData(string&  fname)
 {
-    cout << " Reading input data \n\n " << endl;
+    PetscPrintf(MPI_COMM_WORLD, "\n\n Reading input data \n\n");
 
     infilename = fname;
 
@@ -54,7 +54,7 @@ void  StabFEM::readInputData(string&  fname)
 
     if(infile.fail())
     {
-        cout << " Could not open the input nodes file " << endl;
+        PetscPrintf(MPI_COMM_WORLD, "\n\n Could not open the input nodes file \n\n");
         exit(1);
     }
 
@@ -84,27 +84,29 @@ void  StabFEM::readInputData(string&  fname)
     // read number of Output nodes
     infile >> stringVal >> nOutputFaceLoads;
 
-    cout << " ndim              =  " << ndim << endl;
-    cout << " ndof              =  " << ndof << endl;
-    cout << " nNode_global      =  " << nNode_global << endl;
-    cout << " nElem_global      =  " << nElem_global << endl;
-    cout << " npElem            =  " << npElem << endl;
-    cout << " nDBC              =  " << nDBC << endl;
-    cout << " nFBC              =  " << nFBC << endl;
-    cout << " nOutputFaceLoads  =  " << nOutputFaceLoads << endl;
-
+    if(this_mpi_proc == 0)
+    {
+      cout << " ndim              =  " << ndim << endl;
+      cout << " ndof              =  " << ndof << endl;
+      cout << " nNode_global      =  " << nNode_global << endl;
+      cout << " nElem_global      =  " << nElem_global << endl;
+      cout << " npElem            =  " << npElem << endl;
+      cout << " nDBC              =  " << nDBC << endl;
+      cout << " nFBC              =  " << nFBC << endl;
+      cout << " nOutputFaceLoads  =  " << nOutputFaceLoads << endl;
+    }
 
     // read nodal coordinates
     ////////////////////////////////////////////
 
-    cout << " reading nodes " << endl;
+    PetscPrintf(MPI_COMM_WORLD, "\n\n reading nodes \n\n");
 
     node_coords.resize(nNode_global);
     for(ii=0; ii<nNode_global; ++ii)
       node_coords[ii].resize(ndim);
 
     infile >> stringVal ;
-    cout << " reading " << stringVal << endl;
+    PetscPrintf(MPI_COMM_WORLD, "\n\n reading, %s \n\n", stringVal);
     if(ndim == 2)
     {
       for(ii=0; ii<nNode_global; ++ii)
@@ -123,7 +125,7 @@ void  StabFEM::readInputData(string&  fname)
     // read elements
     ////////////////////////////////////////////
     infile >> stringVal ;
-    cout << " reading " << stringVal << '\t' << npElem << endl;
+    PetscPrintf(MPI_COMM_WORLD, "\n\n reading %s \t %d \n\n", stringVal, npElem);
 
     elemConn.resize(nElem_global);
 
@@ -134,8 +136,6 @@ void  StabFEM::readInputData(string&  fname)
         elemConn[ee].resize(npElem);
 
         infile >> arrayInt[0] >> arrayInt[1] >> arrayInt[2] >> arrayInt[3] >> arrayInt[4] >> arrayInt[5] >> arrayInt[6];
-
-        //printf("%6d \t %6d \t %6d \t %6d \n", arrayInt[4], arrayInt[5], arrayInt[6], arrayInt[7]);
 
         for(ii=0; ii<npElem; ++ii)
           elemConn[ee][ii] = arrayInt[4+ii]-1;
@@ -179,7 +179,6 @@ void  StabFEM::readInputData(string&  fname)
     vector<double>  vecDblTemp(3);
 
     infile >> stringVec[0] >> stringVec[1] >> stringVec[2] ;
-    cout << " reading " << stringVec[0] << stringVec[1] << stringVec[2] << endl;
 
     for(ii=0; ii<nDBC; ++ii)
     {
@@ -198,10 +197,8 @@ void  StabFEM::readInputData(string&  fname)
     ////////////////////////////////////////////
 
     infile >> stringVal ;
-    cout << " reading " << stringVal << endl;
 
     outputEdges.resize(nOutputFaceLoads);
-
     for(ii=0; ii<nOutputFaceLoads; ++ii)
     {
       outputEdges[ii].resize(1);
@@ -220,7 +217,7 @@ void  StabFEM::readInputData(string&  fname)
 
     if(fout_convdata.fail())
     {
-       cout << " Could not open the Output file" << endl;
+       cout << " Could not open the output file for writing forces " << endl;
        exit(1);
     }
 
@@ -228,7 +225,7 @@ void  StabFEM::readInputData(string&  fname)
     fout_convdata.setf(ios::showpoint);
     fout_convdata.precision(14);
 
-    cout << " Input files have been read successfully \n\n " << endl;
+    PetscPrintf(MPI_COMM_WORLD, "\n\n Input files have been read successfully \n\n");
 
     return;
 }
@@ -237,11 +234,9 @@ void  StabFEM::readInputData(string&  fname)
 
 void StabFEM::readControlParameters(string& fname)
 {
-    cout << " StabFEM::readControlParameters " << endl;
+    PetscPrintf(MPI_COMM_WORLD, "\n\n StabFEM::readControlParameters \n\n");
 
-    //ifstream  infile("control-parameters.dat");
     ifstream  infile(fname);
-
     if(infile.fail())
     {
        cout << " Could not open 'control-parameters.dat' file " << endl;
@@ -288,7 +283,7 @@ void StabFEM::readControlParameters(string& fname)
 
     infile.close();
 
-    cout << " Control parameters are successfully read " << endl;
+    PetscPrintf(MPI_COMM_WORLD, "\n\n Control parameters are successfully read \n\n");
 
     return;
 }
@@ -299,7 +294,7 @@ void StabFEM::readControlParameters(string& fname)
 
 void StabFEM::prepareInputData()
 {
-    printf("\n     StabFEM::prepareInputData()  .... STARTED ...\n");
+    PetscPrintf(MPI_COMM_WORLD, "\n\n  StabFEM::prepareInputData()  .... STARTED ...\n\n");
 
     int ii, jj, kk, ee, nn, ind, n1, n2, dof;
 
@@ -344,8 +339,6 @@ void StabFEM::prepareInputData()
     }
 
 
-    cout << " elements are created and prepared " << endl;
-
     ///////////////////////////////////////////////////////////////////
     //
     // set SolnData details
@@ -354,7 +347,7 @@ void StabFEM::prepareInputData()
 
     SolnData.initialise(nNode_global*ndof);
 
-    printf("     StabFEM::prepareInputData()  .... FINISHED ...\n\n");
+    PetscPrintf(MPI_COMM_WORLD, "\n\n  StabFEM::prepareInputData()  .... FINISHED ...\n\n");
 
     return;
 }

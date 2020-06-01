@@ -20,8 +20,6 @@ int StabFEM::setSolver(int slv, int *parm, bool cIO)
 
     prepareMatrixPattern();
 
-    //solverPetsc->setSolverAndParameters();
-
     if(solverPetsc != NULL)
       solverPetsc->checkIO = cIO;
 
@@ -33,7 +31,7 @@ int StabFEM::setSolver(int slv, int *parm, bool cIO)
 
 int StabFEM::prepareMatrixPattern()
 {
-    cout <<  "\n     StabFEM::prepareMatrixPattern()  .... STARTED ...\n" <<  endl;
+    PetscPrintf(MPI_COMM_WORLD, "\n\n     StabFEM::prepareMatrixPattern()  .... STARTED ...\n\n");
 
     int  size1, size2, row, col;
     int  tempDOF, domTemp, ind;
@@ -80,14 +78,17 @@ int StabFEM::prepareMatrixPattern()
       }
     }
 
-    cout << " Mesh statistics .....\n" << endl;
-    cout << " nElem_global     = " << '\t' << nElem_global << endl;
-    cout << " nNode_global     = " << '\t' << nNode_global  << endl;
-    cout << " npElem           = " << '\t' << npElem << endl;
-    cout << " ndof             = " << '\t' << ndof << endl;
-    cout << " ntotdofs_local   = " << '\t' << ntotdofs_local  << endl;
-    cout << " ntotdofs_global  = " << '\t' << ntotdofs_global << endl;
-    cout << " n_mpi_procs      = " << '\t' << n_mpi_procs << endl;
+    if(this_mpi_proc == 0)
+    {
+      cout << " Mesh statistics .....\n" << endl;
+      cout << " nElem_global     = " << '\t' << nElem_global << endl;
+      cout << " nNode_global     = " << '\t' << nNode_global  << endl;
+      cout << " npElem           = " << '\t' << npElem << endl;
+      cout << " ndof             = " << '\t' << ndof << endl;
+      cout << " ntotdofs_local   = " << '\t' << ntotdofs_local  << endl;
+      cout << " ntotdofs_global  = " << '\t' << ntotdofs_global << endl;
+      cout << " n_mpi_procs      = " << '\t' << n_mpi_procs << endl;
+    }
 
     node_map_get_old.resize(nNode_global, 0);
     node_map_get_new.resize(nNode_global, 0);
@@ -132,15 +133,15 @@ int StabFEM::prepareMatrixPattern()
     }
     else
     {
-        cout << "Before partitionMesh ... " << this_mpi_proc << endl; 
+        PetscPrintf(MPI_COMM_WORLD, "\n\n Before partitionMesh ... \n\n");
         partitionMesh();
-        cout << "After partitionMesh ... " << this_mpi_proc << endl; 
+        PetscPrintf(MPI_COMM_WORLD, "\n\n After partitionMesh ... \n\n"); 
 
         errpetsc = MPI_Barrier(MPI_COMM_WORLD);
 
-        cout << "Before prepareDataForParallel ... " << this_mpi_proc << endl; 
+        PetscPrintf(MPI_COMM_WORLD, "\n\n Before prepareDataForParallel ... \n\n");
         prepareDataForParallel();
-        cout << "After prepareDataForParallel ... " << this_mpi_proc << endl; 
+        PetscPrintf(MPI_COMM_WORLD, "\n\n After prepareDataForParallel ... \n\n");
 
         errpetsc = MPI_Barrier(MPI_COMM_WORLD);
     }
@@ -149,8 +150,6 @@ int StabFEM::prepareMatrixPattern()
     SolnData.node_map_get_new = node_map_get_new;
 
     errpetsc = MPI_Barrier(MPI_COMM_WORLD);
-
-    printf("\n aaaaaaaaaa \n\n");
 
     for(ee=0; ee<nElem_global; ++ee)
     {
@@ -188,8 +187,8 @@ int StabFEM::prepareMatrixPattern()
       }
     }
 
-    printf("\n Preparing matrix pattern DONE \n\n");
-    printf("\n element DOF values initialised \n\n");
+    PetscPrintf(MPI_COMM_WORLD, "\n\n Preparing matrix pattern DONE \n\n");
+    PetscPrintf(MPI_COMM_WORLD, "\n\n Element DOF values initialised \n\n");
 
     cout << " Total DOF   = " << '\t' << ntotdofs_local << '\t' << ntotdofs_global << endl;
 
@@ -205,15 +204,13 @@ int StabFEM::prepareMatrixPattern()
       n2 = n1;
     }
 
-    cout << "n1, n2 = " <<  this_mpi_proc << '\t' << n1 << '\t' << n2 << endl;
-
     for(ii=0; ii<ntotdofs_local; ii++)
     {
       diag_nnz[ii]    = n1;
       offdiag_nnz[ii] = n2;
     }
 
-    cout <<  " Initialising petsc solver " << endl;
+    PetscPrintf(MPI_COMM_WORLD, "\n\n Initialising petsc solver \n\n");
 
     // Initialize the petsc solver
     solverPetsc->initialise(ntotdofs_local, ntotdofs_global, diag_nnz, offdiag_nnz);
