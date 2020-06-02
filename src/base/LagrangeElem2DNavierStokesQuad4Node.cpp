@@ -87,7 +87,7 @@ void LagrangeElem2DNavierStokesQuad4Node::prepareElemData(vector<vector<double> 
       {
         cout << " Negative Jacobian in 'LagrangeElem2DNavierStokesQuad4Node::prepareElemData' " << endl;
         cout << " Jac = " << Jac << endl;
-        exit[1];
+        exit(1);
       }
 
       dvol = gwts[gp]*Jac;

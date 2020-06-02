@@ -1,0 +1,118 @@
+cmake_minimum_required(VERSION 2.6)
+project(cfdsfemmpi)
+
+enable_language(CXX)
+
+##################################
+# project directories
+##################################
+
+
+#PROJECT_BINARY_DIR
+#PROJECT_SOURCE_DIR
+
+##################################
+# compiler options
+##################################
+
+# C++ compiler
+
+set(CMAKE_C_COMPILER icc)
+set(CMAKE_CXX_COMPILER icpc)
+set(CMAKE_Fortran_COMPILER ifort)
+
+#set(CMAKE_C_COMPILER scorep-mpicc)
+#set(CMAKE_CXX_COMPILER scorep-mpicxx)
+#set(CMAKE_Fortran_COMPILER scorep-mpifort)
+
+
+
+#set(CMAKE_CXX_COMPILER "/usr/bin/g++")
+#set(CMAKE_CXX_COMPILER "/opt/mylib/ompp-0.8.5/bin/kinst-ompp /usr/bin/g++")
+#set(CXX "kinst-ompp g++")
+#set(CMAKE_CXX_COMPILER "kinst-ompp g++")
+
+#if(CXX_COMPILER_NAME MATCHES "icc*")
+#    message ("Using INTEL C++ compiler")
+#    set(COPT "-O3 -Wall -DSELF_CHECK -DUNIX")
+#endif()
+
+#if(CXX_COMPILER_NAME MATCHES "gcc*")
+#    message ("Using GNU C++ compiler")
+#    set(COPT "-std=c++11 -O3 -w -funroll-loops -ftree-vectorize -ftree-vectorizer-verbose=1  -Wno-write-strings -Wno-uninitialized -Wno-deprecated  -Wno-format -fpermissive -frounding-math")
+#endif()
+
+#message ("${CXX_COMPILER_NAME}")
+#message ("${CXX}")
+
+
+#set(COPT "-Wall -std=c++14  -O3")
+
+set(COPT "-w -std=c++11 -O3 -mavx2 -ftree-vectorize -ftree-vectorizer-verbose=1 -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic -Wno-uninitialized -Wno-sign-compare -Wno-write-strings  -Wno-deprecated  -Wno-unused  -Wno-format -Wno-narrowing  -Wno-reorder  -Wreturn-type -Wno-unused-parameter -fopenmp -fpermissive -frounding-math")
+
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COPT}")
+
+
+##################################
+# include directories
+##################################
+include_directories(
+src/base
+/apps/compilers/intel/2018.2/compilers_and_libraries_2018/linux/mkl/include
+/apps/libraries/mpich/3.2.1/el7/AVX512/intel-2018/include
+/apps/libraries/vtk/8.2.0/el7/AVX512/intel-2018/include/vtk-8.2
+/home/s.engkadac/eigen-eigen-8071cda5714d
+/home/s.engkadac/eigen-eigen-8071cda5714d/unsupported
+/apps/libraries/PETSc/3.10.4/el7/AVX512/intel-2018/mpich-3.2.1/include
+)
+
+
+
+##################################
+# lib directories
+##################################
+link_directories(
+/apps/compilers/intel/2018.2/compilers_and_libraries_2018/linux/mkl/lib/intel64
+/apps/libraries/mpich/3.2.1/el7/AVX512/intel-2018/lib
+/apps/libraries/vtk/8.2.0/el7/AVX512/intel-2018/lib64
+/apps/libraries/PETSc/3.10.4/el7/AVX512/intel-2018/mpich-3.2.1/lib
+)
+
+
+
+##################################
+# source files
+##################################
+
+
+file(GLOB sources1 src/base/*.h)
+file(GLOB sources2 src/base/*.cpp)
+
+##################################
+##################################
+
+
+add_executable(cfdsfemmpi       src/cfdsfemmpi.cpp ${sources1} ${sources2})
+add_executable(test-ldc-stru-nelem10    src/test-ldc-stru-nelem10.cpp ${sources1} ${sources2})
+add_executable(test-ldc-stru-mesh2    src/test-ldc-stru-mesh2.cpp ${sources1} ${sources2})
+
+
+set(VTKlibs "vtkCommonCore-8.2  vtkIOCore-8.2  vtkIOGeometry-8.2  vtkIOXML-8.2  vtkIOImage-8.2  vtkIOExport-8.2   vtkRenderingCore-8.2  vtkFiltersCore-8.2  vtkFiltersGeneral-8.2   vtkFiltersModeling-8.2  vtkFiltersSources-8.2  vtkRenderingAnnotation-8.2  vtkRenderingVolume-8.2  vtkInteractionStyle-8.2  vtkCommonExecutionModel-8.2  vtkCommonDataModel-8.2  vtkFiltersExtraction-8.2  vtkRenderingFreeType-8.2  vtkIOParallel-8.2  vtkIOParallelXML-8.2")
+
+target_link_libraries(cfdsfemmpi stdc++ m blas lapack    metis  petsc  mpi  mpicxx  vtkCommonCore-8.2  vtkIOCore-8.2  vtkIOGeometry-8.2  vtkIOXML-8.2  vtkIOImage-8.2  vtkIOExport-8.2   vtkRenderingCore-8.2  vtkFiltersCore-8.2  vtkFiltersGeneral-8.2   vtkFiltersModeling-8.2  vtkFiltersSources-8.2  vtkRenderingAnnotation-8.2  vtkRenderingVolume-8.2  vtkInteractionStyle-8.2  vtkCommonExecutionModel-8.2  vtkCommonDataModel-8.2  vtkFiltersExtraction-8.2  vtkRenderingFreeType-8.2  vtkIOParallel-8.2  vtkIOParallelXML-8.2)
+
+target_link_libraries(test-ldc-stru-nelem10 stdc++ m  blas lapack    metis  petsc  mpi  mpicxx  vtkCommonCore-8.2  vtkIOCore-8.2  vtkIOGeometry-8.2  vtkIOXML-8.2  vtkIOImage-8.2  vtkIOExport-8.2   vtkRenderingCore-8.2  vtkFiltersCore-8.2  vtkFiltersGeneral-8.2   vtkFiltersModeling-8.2  vtkFiltersSources-8.2  vtkRenderingAnnotation-8.2  vtkRenderingVolume-8.2  vtkInteractionStyle-8.2  vtkCommonExecutionModel-8.2  vtkCommonDataModel-8.2  vtkFiltersExtraction-8.2  vtkRenderingFreeType-8.2  vtkIOParallel-8.2  vtkIOParallelXML-8.2)
+
+target_link_libraries(test-ldc-stru-mesh2 stdc++ m  blas lapack    metis  petsc  mpi  mpicxx  vtkCommonCore-8.2  vtkIOCore-8.2  vtkIOGeometry-8.2  vtkIOXML-8.2  vtkIOImage-8.2  vtkIOExport-8.2   vtkRenderingCore-8.2  vtkFiltersCore-8.2  vtkFiltersGeneral-8.2   vtkFiltersModeling-8.2  vtkFiltersSources-8.2  vtkRenderingAnnotation-8.2  vtkRenderingVolume-8.2  vtkInteractionStyle-8.2  vtkCommonExecutionModel-8.2  vtkCommonDataModel-8.2  vtkFiltersExtraction-8.2  vtkRenderingFreeType-8.2  vtkIOParallel-8.2  vtkIOParallelXML-8.2)
+
+install(TARGETS  cfdsfemmpi  RUNTIME DESTINATION /home/s.engkadac/cfdsfemmpi/bin)
+install(TARGETS  test-ldc-stru-nelem10  RUNTIME DESTINATION /home/s.engkadac/cfdsfemmpi/bin)
+install(TARGETS  test-ldc-stru-mesh2  RUNTIME DESTINATION /home/s.engkadac/cfdsfemmpi/bin)
+
+
+
+#enable_testing()
+#add_subdirectory(tests)
+
+

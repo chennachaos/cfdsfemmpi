@@ -23,7 +23,7 @@ int StabFEM::setSolver(int slv, int *parm, bool cIO)
     if(solverPetsc != NULL)
       solverPetsc->checkIO = cIO;
 
-    return;
+    return 0;
 }
 
 
@@ -247,7 +247,7 @@ int StabFEM::prepareMatrixPattern()
 
     PetscPrintf(MPI_COMM_WORLD, " StabFEM::prepareMatrixPattern()  .... FINISHED. Took %f  milliseconds \n", (tend-tstart)*1000);
 
-    return;
+    return 0;
 }
 
 

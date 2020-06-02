@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
         cerr << " Aborting..." << endl;
     }
 
-    PetscInitialize(NULL, NULL, "petsc_options.dat", NULL);
+    PetscInitialize(NULL, NULL, "../input/petsc_options.dat", NULL);
 
     string  meshfile = argv[1];
     string  controlfile = argv[2];

@@ -106,7 +106,7 @@ void  StabFEM::readInputData(string&  fname)
       node_coords[ii].resize(ndim);
 
     infile >> stringVal ;
-    PetscPrintf(MPI_COMM_WORLD, "\n\n reading, %s \n\n", stringVal);
+    PetscPrintf(MPI_COMM_WORLD, "\n\n reading, %s \n\n", stringVal.c_str());
     if(ndim == 2)
     {
       for(ii=0; ii<nNode_global; ++ii)
@@ -125,7 +125,7 @@ void  StabFEM::readInputData(string&  fname)
     // read elements
     ////////////////////////////////////////////
     infile >> stringVal ;
-    PetscPrintf(MPI_COMM_WORLD, "\n\n reading %s \t %d \n\n", stringVal, npElem);
+    PetscPrintf(MPI_COMM_WORLD, "\n\n reading %s \t %d \n\n", stringVal.c_str(), npElem);
 
     elemConn.resize(nElem_global);
 
