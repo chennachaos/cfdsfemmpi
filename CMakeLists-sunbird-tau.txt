@@ -21,40 +21,24 @@ enable_language(CXX)
 #set(CMAKE_CXX_COMPILER icpc)
 #set(CMAKE_Fortran_COMPILER ifort)
 
+#set(CMAKE_C_COMPILER "/apps/tools/score-p/5.0/el7/AVX512/gnu-8.1/openmpi-3.1/bin/scorep-mpicc")
+#set(CMAKE_CXX_COMPILER "/apps/tools/score-p/5.0/el7/AVX512/gnu-8.1/openmpi-3.1/bin/scorep-mpicxx")
+#set(CMAKE_Fortran_COMPILER "/apps/tools/score-p/5.0/el7/AVX512/gnu-8.1/openmpi-3.1/bin/scorep-mpif90")
 
-set(CMAKE_C_COMPILER gcc)
-set(CMAKE_CXX_COMPILER g++)
-set(CMAKE_Fortran_COMPILER gfortran)
+#set(CMAKE_C_COMPILER "/apps/libraries/openmpi/3.1.1/el7/AVX512/gnu-8.1/bin/mpicc")
+#set(CMAKE_CXX_COMPILER "/apps/libraries/openmpi/3.1.1/el7/AVX512/gnu-8.1/bin/mpicxx")
+#set(CMAKE_Fortran_COMPILER "/apps/libraries/openmpi/3.1.1/el7/AVX512/gnu-8.1/bin/mpif90")
 
+set(CMAKE_C_COMPILER "/apps/tools/tau/2.28.1/el7/AVX512/gnu-8.1/openmpi-3.1/x86_64/bin/taucc")
+set(CMAKE_CXX_COMPILER "/apps/tools/tau/2.28.1/el7/AVX512/gnu-8.1/openmpi-3.1/x86_64/bin/taucxx")
+set(CMAKE_Fortran_COMPILER "/apps/tools/tau/2.28.1/el7/AVX512/gnu-8.1/openmpi-3.1/x86_64/bin/tauf90")
 
-#set(CMAKE_C_COMPILER scorep-mpicc)
-#set(CMAKE_CXX_COMPILER scorep-mpicxx)
-#set(CMAKE_Fortran_COMPILER scorep-mpifort)
-
-
-
-#set(CMAKE_CXX_COMPILER "/usr/bin/g++")
-#set(CMAKE_CXX_COMPILER "/opt/mylib/ompp-0.8.5/bin/kinst-ompp /usr/bin/g++")
-#set(CXX "kinst-ompp g++")
-#set(CMAKE_CXX_COMPILER "kinst-ompp g++")
-
-#if(CXX_COMPILER_NAME MATCHES "icc*")
-#    message ("Using INTEL C++ compiler")
-#    set(COPT "-O3 -Wall -DSELF_CHECK -DUNIX")
-#endif()
-
-#if(CXX_COMPILER_NAME MATCHES "gcc*")
-#    message ("Using GNU C++ compiler")
-#    set(COPT "-std=c++11 -O3 -w -funroll-loops -ftree-vectorize -ftree-vectorizer-verbose=1  -Wno-write-strings -Wno-uninitialized -Wno-deprecated  -Wno-format -fpermissive -frounding-math")
-#endif()
 
 #message ("${CXX_COMPILER_NAME}")
 #message ("${CXX}")
 
 
-#set(COPT "-Wall -std=c++14  -O3")
-
-set(COPT "-w -std=c++11 -g -mavx2 -ftree-vectorize -ftree-vectorizer-verbose=1 -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic -Wno-uninitialized -Wno-sign-compare -Wno-write-strings  -Wno-deprecated  -Wno-unused  -Wno-format -Wno-narrowing  -Wno-reorder  -Wreturn-type -Wno-unused-parameter -fopenmp -fpermissive -frounding-math")
+set(COPT "-w -std=c++14 -O2  -g  -dynamic -mavx2 -ftree-vectorize -ftree-vectorizer-verbose=1 -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic -Wno-uninitialized -Wno-sign-compare -Wno-write-strings  -Wno-deprecated  -Wno-unused  -Wno-format -Wno-narrowing  -Wno-reorder  -Wreturn-type -Wno-unused-parameter -fopenmp -fpermissive -frounding-math")
 
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COPT}")
@@ -65,6 +49,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COPT}")
 ##################################
 include_directories(
 src/base
+#/apps/compilers/intel/2018.2/compilers_and_libraries_2018/linux/mkl/include
 ../mylibs/eigen-devel  
 ../mylibs/eigen-devel/unsupported 
 /apps/libraries/openmpi/3.1.1/el7/AVX512/gnu-8.1/include
@@ -114,9 +99,9 @@ target_link_libraries(test-ldc-stru-nelem10 stdc++ m  blas lapack    metis  pets
 
 target_link_libraries(test-ldc-stru-mesh2 stdc++ m  blas lapack    metis  petsc  mpi  vtkCommonCore-8.2  vtkIOCore-8.2  vtkIOGeometry-8.2  vtkIOXML-8.2  vtkIOImage-8.2  vtkIOExport-8.2   vtkRenderingCore-8.2  vtkFiltersCore-8.2  vtkFiltersGeneral-8.2   vtkFiltersModeling-8.2  vtkFiltersSources-8.2  vtkRenderingAnnotation-8.2  vtkRenderingVolume-8.2  vtkInteractionStyle-8.2  vtkCommonExecutionModel-8.2  vtkCommonDataModel-8.2  vtkFiltersExtraction-8.2  vtkRenderingFreeType-8.2  vtkIOParallel-8.2  vtkIOParallelXML-8.2)
 
-install(TARGETS  cfdsfemmpi  RUNTIME DESTINATION /home/s.engkadac/cfdsfemmpi/bin)
-install(TARGETS  test-ldc-stru-nelem10  RUNTIME DESTINATION /home/s.engkadac/cfdsfemmpi/bin)
-install(TARGETS  test-ldc-stru-mesh2  RUNTIME DESTINATION /home/s.engkadac/cfdsfemmpi/bin)
+install(TARGETS  cfdsfemmpi  RUNTIME DESTINATION /home/s.engkadac/cfdsfemmpi/bin-tau)
+install(TARGETS  test-ldc-stru-nelem10  RUNTIME DESTINATION /home/s.engkadac/cfdsfemmpi/bin-tau)
+install(TARGETS  test-ldc-stru-mesh2  RUNTIME DESTINATION /home/s.engkadac/cfdsfemmpi/bin-tau)
 
 
 

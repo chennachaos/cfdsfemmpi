@@ -21,32 +21,13 @@ enable_language(CXX)
 #set(CMAKE_CXX_COMPILER icpc)
 #set(CMAKE_Fortran_COMPILER ifort)
 
-
-set(CMAKE_C_COMPILER gcc)
-set(CMAKE_CXX_COMPILER g++)
-set(CMAKE_Fortran_COMPILER gfortran)
-
-
 #set(CMAKE_C_COMPILER scorep-mpicc)
 #set(CMAKE_CXX_COMPILER scorep-mpicxx)
 #set(CMAKE_Fortran_COMPILER scorep-mpifort)
 
-
-
-#set(CMAKE_CXX_COMPILER "/usr/bin/g++")
-#set(CMAKE_CXX_COMPILER "/opt/mylib/ompp-0.8.5/bin/kinst-ompp /usr/bin/g++")
-#set(CXX "kinst-ompp g++")
-#set(CMAKE_CXX_COMPILER "kinst-ompp g++")
-
-#if(CXX_COMPILER_NAME MATCHES "icc*")
-#    message ("Using INTEL C++ compiler")
-#    set(COPT "-O3 -Wall -DSELF_CHECK -DUNIX")
-#endif()
-
-#if(CXX_COMPILER_NAME MATCHES "gcc*")
-#    message ("Using GNU C++ compiler")
-#    set(COPT "-std=c++11 -O3 -w -funroll-loops -ftree-vectorize -ftree-vectorizer-verbose=1  -Wno-write-strings -Wno-uninitialized -Wno-deprecated  -Wno-format -fpermissive -frounding-math")
-#endif()
+set(CMAKE_C_COMPILER "/apps/tools/score-p/5.0/el7/AVX512/gnu-8.1/openmpi-3.1/bin/scorep-mpicc")
+set(CMAKE_CXX_COMPILER "/apps/tools/score-p/5.0/el7/AVX512/gnu-8.1/openmpi-3.1/bin/scorep-mpicxx")
+set(CMAKE_Fortran_COMPILER "/apps/tools/score-p/5.0/el7/AVX512/gnu-8.1/openmpi-3.1/bin/scorep-mpif90")
 
 #message ("${CXX_COMPILER_NAME}")
 #message ("${CXX}")
@@ -54,7 +35,7 @@ set(CMAKE_Fortran_COMPILER gfortran)
 
 #set(COPT "-Wall -std=c++14  -O3")
 
-set(COPT "-w -std=c++11 -g -mavx2 -ftree-vectorize -ftree-vectorizer-verbose=1 -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic -Wno-uninitialized -Wno-sign-compare -Wno-write-strings  -Wno-deprecated  -Wno-unused  -Wno-format -Wno-narrowing  -Wno-reorder  -Wreturn-type -Wno-unused-parameter -fopenmp -fpermissive -frounding-math")
+set(COPT "-w -std=c++14 -O3 -mavx2 -ftree-vectorize -ftree-vectorizer-verbose=1 -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic -Wno-uninitialized -Wno-sign-compare -Wno-write-strings  -Wno-deprecated  -Wno-unused  -Wno-format -Wno-narrowing  -Wno-reorder  -Wreturn-type -Wno-unused-parameter -fopenmp -fpermissive -frounding-math")
 
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COPT}")
@@ -65,6 +46,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COPT}")
 ##################################
 include_directories(
 src/base
+#/apps/compilers/intel/2018.2/compilers_and_libraries_2018/linux/mkl/include
 ../mylibs/eigen-devel  
 ../mylibs/eigen-devel/unsupported 
 /apps/libraries/openmpi/3.1.1/el7/AVX512/gnu-8.1/include
