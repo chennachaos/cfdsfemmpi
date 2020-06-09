@@ -388,12 +388,14 @@ int SolverPetsc::factoriseAndSolve()
 
 
 
-int SolverPetsc::assembleMatrixAndVectorSerial(vector<int>& forAssyElem, MatrixXdRM& Klocal, VectorXd& Flocal)
+int SolverPetsc::assembleMatrixAndVectorSerial(vector<int>& forAssyElem, MatrixXd& Klocal, VectorXd& Flocal)
 {
   int  size1 = forAssyElem.size();
 
+  MatrixXdRM Klocal2 = Klocal;
+
   VecSetValues(rhsVec, size1, &forAssyElem[0], &Flocal[0], ADD_VALUES);
-  MatSetValues(mtx,    size1, &forAssyElem[0], size1, &forAssyElem[0], &Klocal(0,0), ADD_VALUES);
+  MatSetValues(mtx,    size1, &forAssyElem[0], size1, &forAssyElem[0], &Klocal2(0,0), ADD_VALUES);
 
   return 0;
 }

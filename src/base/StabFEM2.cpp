@@ -527,14 +527,14 @@ int  StabFEM::solveFullyImplicit()
     int  stepsCompleted=0;
     int  aa, bb, ee, ii, jj, kk, count, row, col, ind, n1, n2, size1, size2;
 
-    double  norm_rhs, fact, fact1, fact2;
+    double  norm_rhs, fact, fact1, fact2, timerStart, timerEnd;
     double  timeNow=dt, timeFact=0.0;
 
     VectorXd  reacVec(nNode_global*ndof);
     VectorXd  TotalForce(3);
     ind = npElem*ndof;
     VectorXd  Flocal(ind);
-    MatrixXdRM  Klocal(ind, ind);
+    MatrixXd  Klocal(ind, ind);
     PetscScalar *arrayTempSoln;
     Vec            vec_SEQ;
     VecScatter     ctx;
@@ -583,6 +583,8 @@ int  StabFEM::solveFullyImplicit()
 
             //PetscPrintf(MPI_COMM_WORLD, "\n Element loop \n");
 
+            timerStart = MPI_Wtime();
+
             // loop over elements and compute matrix and residual
             for(ee=0; ee<nElem_global; ee++)
             {
@@ -619,6 +621,9 @@ int  StabFEM::solveFullyImplicit()
                 solverPetsc->assembleMatrixAndVectorSerial(elems[ee]->forAssyVec, Klocal, Flocal);
               } // if(elem_proc_id[ee] == this_proc_id)
             } //Element Loop
+
+            timerEnd = MPI_Wtime(); 
+            PetscPrintf(MPI_COMM_WORLD, "\n\n Elapsed time for matrix assembly = %f seconds \n\n", timerEnd - timerStart );
 
             MPI_Barrier(MPI_COMM_WORLD);
 
@@ -661,11 +666,14 @@ int  StabFEM::solveFullyImplicit()
             {
                 PetscPrintf(MPI_COMM_WORLD, "Assembly done. Solving the matrix system. \n");
 
+                timerStart = MPI_Wtime();
                 if( solverPetsc->factoriseAndSolve() )
                 {
                   PetscPrintf(MPI_COMM_WORLD, " PETSc solver not converged. \n\n");
                   return -1;
                 }
+                timerEnd = MPI_Wtime(); 
+                PetscPrintf(MPI_COMM_WORLD, "\n\n Elapsed time for PETSc solver = %f seconds \n\n", timerEnd - timerStart );
 
                 /////////////////////////////////////////////////////////////////////////////
                 // get the solution vector onto all the processors

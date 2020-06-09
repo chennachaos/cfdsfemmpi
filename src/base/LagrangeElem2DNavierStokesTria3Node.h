@@ -16,7 +16,7 @@ class  LagrangeElem2DNavierStokesTria3Node : public ElementBase
 
     void prepareElemData(vector<vector<double> >& node_coods);
 
-    virtual int  calcStiffnessAndResidual(vector<vector<double> >& node_coords, double* elemData, MatrixXdRM& Klocal, VectorXd& Flocal, double timeCur);
+    virtual int  calcStiffnessAndResidual(vector<vector<double> >& node_coords, double* elemData, MatrixXd& Klocal, VectorXd& Flocal, double timeCur);
 
     virtual  int calcError(int index);
 };

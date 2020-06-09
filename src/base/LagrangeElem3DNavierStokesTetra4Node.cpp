@@ -117,7 +117,7 @@ void LagrangeElem3DNavierStokesTetra4Node::prepareElemData(vector<vector<double>
 
 
 //
-int LagrangeElem3DNavierStokesTetra4Node::calcStiffnessAndResidual(vector<vector<double> >& node_coords, double* elemData, MatrixXdRM& Klocal, VectorXd& Flocal, double timeCur)
+int LagrangeElem3DNavierStokesTetra4Node::calcStiffnessAndResidual(vector<vector<double> >& node_coords, double* elemData, MatrixXd& Klocal, VectorXd& Flocal, double timeCur)
 {
 /*
   // Fully-implicit formulation

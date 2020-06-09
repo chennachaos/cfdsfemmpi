@@ -680,7 +680,7 @@ int LagrangeElem2DNavierStokesTria3Node::calcStiffnessAndResidual(vector<vector<
 
 
 //
-int LagrangeElem2DNavierStokesTria3Node::calcStiffnessAndResidual(vector<vector<double> >& node_coords, double* elemData, MatrixXdRM& Klocal, VectorXd& Flocal, double timeCur)
+int LagrangeElem2DNavierStokesTria3Node::calcStiffnessAndResidual(vector<vector<double> >& node_coords, double* elemData, MatrixXd& Klocal, VectorXd& Flocal, double timeCur)
 {
     // stabilised formulation
     // semi-implicit scheme - type B
