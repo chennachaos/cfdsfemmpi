@@ -138,10 +138,6 @@ class StabFEM
 
         int   solveFullyImplicit();
 
-        int   initialise_pardiso();
-
-        int   factoriseAndSolve_pardiso();
-
         int   diffStiffTest();
 
         ///////////////////////////////////////////////////////////
