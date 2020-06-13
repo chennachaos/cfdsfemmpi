@@ -699,7 +699,7 @@ int LagrangeElem2DNavierStokesQuad4Node::calcStiffnessAndResidual(vector<vector<
     }
 
     VectorXd  res(3), res2(2), dp(2), Du(2), vel(2), velPrev(2), velExtp(2), velDot(2), force(2), gradTvel(2), rStab(3);
-    MatrixXd  Dj(2, 3), grad(2,2), gradN(2,2), stress(2,2), gradPrev(2,2);
+    MatrixXd  Dj(2,3), grad(2,2), gradN(2,2), stress(2,2), gradPrev(2,2);
     Dj.setZero();
     VectorXd  velTemp(3);
 
@@ -767,22 +767,23 @@ int LagrangeElem2DNavierStokesQuad4Node::calcStiffnessAndResidual(vector<vector<
 
             b1 = SolnData->solnCur[TI];
             b2 = SolnData->solnCur[TIp1];
-            b3 = SolnData->solnCur[TIp2];
 
             vel[0]     += b1*Nv[gp][ii];
             vel[1]     += b2*Nv[gp][ii];
-            pres       += b3*Nv[gp][ii];
 
             grad(0,0)  += b1*dNvdx[gp][ii];
             grad(0,1)  += b1*dNvdy[gp][ii];
             grad(1,0)  += b2*dNvdx[gp][ii];
             grad(1,1)  += b2*dNvdy[gp][ii];
 
-            velDot[0] += SolnData->solnDotCur[TI]*Nv[gp][ii];
-            velDot[1] += SolnData->solnDotCur[TIp1]*Nv[gp][ii];
+            b4 = SolnData->solnCur[TIp2];
 
-            dp(0)     += b3*dNvdx[gp][ii];
-            dp(1)     += b3*dNvdy[gp][ii];
+            pres       += b4*Nv[gp][ii];
+            dp[0]      += b4*dNvdx[gp][ii];
+            dp[1]      += b4*dNvdy[gp][ii];
+
+            velDot[0] += SolnData->solnDotCur[TI]  *Nv[gp][ii];
+            velDot[1] += SolnData->solnDotCur[TIp1]*Nv[gp][ii];
         }
 
         // this is pseudo-stress
@@ -891,6 +892,7 @@ int LagrangeElem2DNavierStokesQuad4Node::calcStiffnessAndResidual(vector<vector<
                 Dj(0,0) = gradN(0,0) + fact2;
                 Dj(0,1) = gradN(0,1);
                 Dj(0,2) = af*dNvdx[gp][jj];
+
                 Dj(1,0) = gradN(1,0);
                 Dj(1,1) = gradN(1,1) + fact2;
                 Dj(1,2) = af*dNvdy[gp][jj];

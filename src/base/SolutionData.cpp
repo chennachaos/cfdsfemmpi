@@ -29,6 +29,7 @@ void SolutionData::initialise(int size1)
   solnPrev2 = soln;
   solnPrev3 = soln;
   solnPrev4 = soln;
+  solnCur   = soln;
 
   solnDot     = soln;
   solnDotPrev = soln;

@@ -7,7 +7,7 @@
 #include "LagrangeElem2DNavierStokesTria3Node.h"
 #include "LagrangeElem2DNavierStokesQuad4Node.h"
 #include "LagrangeElem3DNavierStokesTetra4Node.h"
-//#include "LagrangeElem3DNavierStokesHexa8Node.h"
+#include "LagrangeElem3DNavierStokesHexa8Node.h"
 
 
 using namespace std;
@@ -328,8 +328,8 @@ void StabFEM::prepareInputData()
       {
         if(npElem == 4)
           elems[ee] = new LagrangeElem3DNavierStokesTetra4Node;
-        //else if(npElem == 8)
-          //elems[ee] = new LagrangeElem3DNavierStokesHexa8Node;
+        else if(npElem == 8)
+          elems[ee] = new LagrangeElem3DNavierStokesHexa8Node;
       }
 
       elems[ee]->SolnData = &(SolnData);
@@ -360,8 +360,8 @@ void StabFEM::assignBoundaryConditions(double timeCur, double dt, double timeFac
     int ii, n1, n2, ind;
     for(ii=0; ii<nDBC; ++ii)
     {
-        n1 = DirichletBCs[ii][0];
-        n2 = DirichletBCs[ii][1];
+        n1 = int(DirichletBCs[ii][0]);
+        n2 = int(DirichletBCs[ii][1]);
 
         ind = n1*ndof+n2;
 
@@ -539,4 +539,138 @@ int  StabFEM::readResult(string&  fname)
 
   return  0;
 }
+
+
+
+
+
+int StabFEM::diffStiffTest()
+{
+    SolnData.setTimeParam();
+
+    int  elemnum = 0;
+    cout << " Diff Test for element " << elemnum << endl;
+    int  nlbf = elems[elemnum]->nlbf;
+    int  nsize = elems[elemnum]->nsize;
+
+    double ddd = 1.0;
+    int    i, ii, jnd, jj, j, k, ind, bb, nn;
+
+    double dd[6]  = {-3.*ddd, -2.*ddd, -ddd, +ddd, +2.*ddd, +3.*ddd };
+    double  r[6*nsize], timeNow = 1.0;
+
+    MatrixXd  Klocal1(nsize, nsize), Klocal2(nsize, nsize), Kdiff(nsize, nsize);
+    VectorXd  Flocal(nsize);
+
+    Klocal1.setZero();
+    Klocal2.setZero();
+    Flocal.setZero();
+
+    // loop over columns of s
+
+    for (jnd=0; jnd<nlbf; jnd++) // nodes
+    {
+      for (jj=0; jj<ndof; jj++)  // dof
+      {
+        j = jnd*ndof + jj;
+
+        nn  = elems[elemnum]->nodeNums[jnd];
+        ind = nn*ndof+jj;
+
+        // loop over perturbations
+
+        for (k=0; k<6; k++)
+        {
+          // apply pertubation
+          SolnData.soln[ind] += dd[k];
+
+          SolnData.solnCur[ind]  =  SolnData.soln[ind];
+
+          // calculate residual
+          elems[elemnum]->calcStiffnessAndResidual(node_coords, elemData, Klocal1, Flocal, timeNow);
+          //printMatrix(Klocal1);
+          //printVector(Flocal);
+
+          // remove pertubation
+          SolnData.soln[ind] -= dd[k];
+
+          SolnData.solnCur[ind]  =  SolnData.soln[ind];
+
+          // loop over rows of s, store residual
+
+          for(i=0; i<nsize; i++)
+            r[i*6+k] = Flocal[i];
+        }
+
+        // loop over rows of s
+        for (i=0; i<nsize; i++)
+        Klocal2(j,i) = (   +       r[i*6+0]
+                           -  9. * r[i*6+1]
+                           + 45. * r[i*6+2]
+                           - 45. * r[i*6+3]
+                           +  9. * r[i*6+4]
+                           -       r[i*6+5] ) / (60. * ddd);
+    }
+  }
+
+  cout << " performing Difference calculations " << endl;
+
+  // calculate stiffness
+  elems[elemnum]->calcStiffnessAndResidual(node_coords, elemData, Klocal1, Flocal, timeNow);
+
+  cout.setf(ios::fixed);
+  cout.setf(ios::showpoint);
+  cout.precision(5);
+
+  cout << "    Analytical Stiffness Matrix   " << endl;
+  cout << endl;
+  for(ii=0;ii<nsize;ii++)
+  {
+    cout << '\t' ;
+    for(jj=0;jj<nsize;jj++)
+    {
+      cout  <<  fixed << Klocal1(ii,jj) << "   " ;
+    }
+    cout << endl;
+  }
+  cout << endl;
+  cout << endl;
+
+
+  cout << "    diff Stiffness Matrix   " << endl;
+  cout << endl;
+  cout << endl;
+  for(ii=0;ii<nsize;ii++)
+  {
+    cout << '\t' ;
+    for(jj=0;jj<nsize;jj++)
+    {
+      Kdiff(ii,jj) = Klocal1(ii,jj) - Klocal2(ii,jj);
+      cout  <<  fixed <<  Klocal2(ii,jj) << "   " ;
+    }
+    cout << endl;
+  }
+  cout << endl;
+  cout << endl;
+
+  cout << "    difference of Stiffness Matrices   " << endl;
+  cout << endl;
+  cout << endl;
+  for(ii=0;ii<nsize;ii++)
+  {
+    cout << '\t' ;
+    for(jj=0;jj<nsize;jj++)
+    {
+      cout  <<  fixed << Kdiff(ii, jj) << "   " ;
+    }
+    cout << endl;
+  }
+  cout << endl;
+  cout << endl;
+
+  return 0;
+}
+
+
+
 

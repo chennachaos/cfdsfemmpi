@@ -142,6 +142,8 @@ class StabFEM
 
         int   factoriseAndSolve_pardiso();
 
+        int   diffStiffTest();
+
         ///////////////////////////////////////////////////////////
         //
         // POST-PROCESSOR PHASE member functions

@@ -44,20 +44,19 @@ int main(int argc, char* argv[])
 
     stabfem.prepareInputData();
 
-    //stabfem.partitionMesh();
-
-    double t1, t2; 
+    double timerStart, timerEnd;
     int parm[3];
 
-    t1 = MPI_Wtime(); 
+    timerStart = MPI_Wtime();
     stabfem.setSolver(1, parm, false);
-    t2 = MPI_Wtime(); 
-    PetscPrintf(MPI_COMM_WORLD, "\n\n Elapsed time = %f seconds \n\n", t2 - t1 );
+    timerEnd = MPI_Wtime(); 
+    PetscPrintf(MPI_COMM_WORLD, "\n\n Elapsed time = %f seconds \n\n", timerEnd - timerStart );
 
-    t1 = MPI_Wtime(); 
+    timerStart = MPI_Wtime();
     stabfem.solveFullyImplicit();
-    t2 = MPI_Wtime(); 
-    PetscPrintf(MPI_COMM_WORLD, "\n\n Elapsed time = %f seconds \n\n", t2 - t1 );
+    //stabfem.diffStiffTest();
+    timerEnd = MPI_Wtime(); 
+    PetscPrintf(MPI_COMM_WORLD, "\n\n Elapsed time = %f seconds \n\n", timerEnd - timerStart );
 
     //string  outputfile = "solution.dat";
     //stabfem.writeResult(outputfile);

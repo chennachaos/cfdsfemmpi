@@ -98,7 +98,10 @@ void  StabFEM::postProcess()
       {
         pt[0] = pointsVTK->InsertNextPoint(node_coords[ii][0], node_coords[ii][1], node_coords[ii][2]);
 
-        kk = ii*ndof;
+        procIdVTKnode->InsertTuple1(ii, node_proc_id[ii]);
+
+        nn = node_map_get_new[ii];
+        kk = nn*ndof;
 
         vec[0] = SolnData.soln[kk];
         vec[1] = SolnData.soln[kk+1];
@@ -118,9 +121,16 @@ void  StabFEM::postProcess()
         if(npElem == 4)
         {
           for(ii=0; ii<npElem; ii++)
-            tetraVTK->GetPointIds()->SetId(ii, elemConn[ee][ii] );
+            tetraVTK->GetPointIds()->SetId(ii, node_map_get_old[elemConn[ee][ii]] );
 
           uGridVTK->InsertNextCell(tetraVTK->GetCellType(), tetraVTK->GetPointIds());
+        }
+        else if(npElem == 8)
+        {
+          for(ii=0; ii<npElem; ii++)
+            hexaVTK->GetPointIds()->SetId(ii, node_map_get_old[elemConn[ee][ii]] );
+
+          uGridVTK->InsertNextCell(hexaVTK->GetCellType(), hexaVTK->GetPointIds());
         }
       }
     }

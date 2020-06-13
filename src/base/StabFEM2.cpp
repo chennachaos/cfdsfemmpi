@@ -197,8 +197,8 @@ int StabFEM::prepareMatrixPattern()
     errpetsc  = PetscMalloc1(ntotdofs_local,  &diag_nnz);CHKERRQ(errpetsc);
     errpetsc  = PetscMalloc1(ntotdofs_local,  &offdiag_nnz);CHKERRQ(errpetsc);
 
-    n1 = 50; n2 = 25;
-    if(ntotdofs_local < 50)
+    n1 = 500; n2 = 250;
+    if( (n1 > ntotdofs_local) || (n2 > ntotdofs_local) )
     {
       n1 = ntotdofs_local;
       n2 = n1;
@@ -261,36 +261,36 @@ int StabFEM::partitionMesh()
     {
         int  ee, ii, jj, kk, n2;
         int  nparts = n_mpi_procs, subdomain=0;
-    
+
         /////////////////////////////////////////////////////////////////////////////
         //
         // Partition the mesh. Here, METIS is used.
         // 
         /////////////////////////////////////////////////////////////////////////////
-    
+
         PetscInt  *eptr, *eind;
-    
+
         errpetsc  = PetscMalloc1(nElem_global+1,  &eptr);CHKERRQ(errpetsc);
         errpetsc  = PetscMalloc1(nElem_global*npElem,  &eind);CHKERRQ(errpetsc);
 
         vector<int>  vecTemp2;
-    
+
         eptr[0] = 0;
         kk = 0;
         for(ee=0; ee<nElem_global; ee++)
         {
             eptr[ee+1] = (ee+1)*npElem;
-    
+
             //vecTemp2 = elems[ee]->nodeNums ;
             vecTemp2 = elemConn[ee];
             //printVector(vecTemp2);
-    
+
             for(ii=0; ii<npElem; ii++)
               eind[kk+ii] = vecTemp2[ii] ;
-    
+
             kk += npElem;
         }
-    
+
         int  ncommon_nodes;
         if(ndim == 2)
           ncommon_nodes = 2;    // 3-noded tria or 4-noded quad
@@ -301,29 +301,29 @@ int StabFEM::partitionMesh()
           else
             ncommon_nodes = 4;  // 8-noded hexa element
         }
-    
+
         idx_t objval;
         idx_t options[METIS_NOPTIONS];
-    
+
         METIS_SetDefaultOptions(options);
-    
+
         // Specifies the partitioning method.
         //options[METIS_OPTION_PTYPE] = METIS_PTYPE_RB;          // Multilevel recursive bisectioning.
         options[METIS_OPTION_PTYPE] = METIS_PTYPE_KWAY;        // Multilevel k-way partitioning.
-    
+
         //options[METIS_OPTION_NSEPS] = 10;
-    
+
         //options[METIS_OPTION_OBJTYPE] = METIS_OBJTYPE_CUT;     // Edge-cut minimization
         options[METIS_OPTION_OBJTYPE] = METIS_OBJTYPE_VOL;     // Total communication volume minimization
-    
+
         options[METIS_OPTION_NUMBERING] = 0;  // C-style numbering is assumed that starts from 0.
-    
+
         cout << " Executing METIS subroutine " << endl;
-    
+
         // METIS partition routine
         //int ret = METIS_PartMeshNodal(&nElem_global, &nNode_global, eptr, eind, NULL, NULL, &nparts, NULL, options, &objval, elem_proc_id, node_proc_id);
         int ret = METIS_PartMeshDual(&nElem_global, &nNode_global, eptr, eind, NULL, NULL, &ncommon_nodes, &nparts, NULL, options, &objval, &elem_proc_id[0], &node_proc_id[0]);
-    
+
         if(ret == METIS_OK)
           cout << " METIS partition routine successful "  << endl;
         else
@@ -581,7 +581,7 @@ int  StabFEM::solveFullyImplicit()
 
             MPI_Barrier(MPI_COMM_WORLD);
 
-            //PetscPrintf(MPI_COMM_WORLD, "\n Element loop \n");
+            PetscPrintf(MPI_COMM_WORLD, "\n Element loop \n");
 
             timerStart = MPI_Wtime();
 
@@ -606,12 +606,17 @@ int  StabFEM::solveFullyImplicit()
                         {
                             fact = SolnData.solnApplied[elems[ee]->globalDOFnums[ii]];
 
-                            for(jj=0; jj<size1; jj++)
+                            // check if fact is zero. We don't need to
+                            // execute the for loop if fact is zero.
+                            if( abs(fact) > 1.0e-10)
                             {
+                              for(jj=0; jj<size1; jj++)
+                              {
                                 if( elems[ee]->forAssyVec[jj] != -1 )
                                 {
                                     Flocal(jj) -= Klocal(jj, ii) * fact;
                                 }
+                              }
                             }
                         }
                     }
@@ -634,8 +639,8 @@ int  StabFEM::solveFullyImplicit()
             {
               for(ii=0; ii<nDBC; ++ii)
               {
-                n1 = DirichletBCs[ii][0];
-                n2 = DirichletBCs[ii][1];
+                n1 = int(DirichletBCs[ii][0]);
+                n2 = int(DirichletBCs[ii][1]);
 
                 jj = n1*ndof+n2;
 
@@ -644,6 +649,9 @@ int  StabFEM::solveFullyImplicit()
             }
 
             MPI_Barrier(MPI_COMM_WORLD);
+
+            //for(ii=0; ii<10; ii++)
+              //VecSetValue(solverPetsc->rhsVec, 0, 1.0, ADD_VALUES);
 
             VecAssemblyBegin(solverPetsc->rhsVec);
             VecAssemblyEnd(solverPetsc->rhsVec);
@@ -655,7 +663,7 @@ int  StabFEM::solveFullyImplicit()
 
             //VecView(solverPetsc->rhsVec, PETSC_VIEWER_STDOUT_WORLD);
 
-            PetscPrintf(MPI_COMM_WORLD, " RHS norm = %E \n", norm_rhs);
+            PetscPrintf(MPI_COMM_WORLD, " Iteration = %d  \t RHS norm = %E \n", (iter+1), norm_rhs);
 
             if(norm_rhs < 1.0e-8)
             {
@@ -697,6 +705,7 @@ int  StabFEM::solveFullyImplicit()
                 {
                   SolnData.soln[assyForSoln[ii]]   +=  arrayTempSoln[ii];
                 }
+                postProcess();
 
                 if(n_mpi_procs > 1)
                 {
