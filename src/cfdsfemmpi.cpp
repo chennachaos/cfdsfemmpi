@@ -52,9 +52,11 @@ int main(int argc, char* argv[])
     timerEnd = MPI_Wtime(); 
     PetscPrintf(MPI_COMM_WORLD, "\n\n Elapsed time = %f seconds \n\n", timerEnd - timerStart );
 
+    stabfem.postProcess();
+    //stabfem.diffStiffTest();
+
     timerStart = MPI_Wtime();
     stabfem.solveFullyImplicit();
-    //stabfem.diffStiffTest();
     timerEnd = MPI_Wtime(); 
     PetscPrintf(MPI_COMM_WORLD, "\n\n Elapsed time = %f seconds \n\n", timerEnd - timerStart );
 

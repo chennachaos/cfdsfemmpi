@@ -987,9 +987,9 @@ int LagrangeElem3DNavierStokesTetra4Node::calcStiffnessAndResidual(vector<vector
                 Klocal(TIp2, TJp3) -= (b3*af*Nv[gp][jj]);
 
                 // continuity equation
-                Klocal(TIp3, TJ)   -= (b8*dNvdx[gp][jj]);
-                Klocal(TIp3, TJp1) -= (b8*dNvdy[gp][jj]);
-                Klocal(TIp3, TJp2) -= (b8*dNvdz[gp][jj]);
+                Klocal(TIp3, TJ)   += (b8*dNvdx[gp][jj]);
+                Klocal(TIp3, TJp1) += (b8*dNvdy[gp][jj]);
+                Klocal(TIp3, TJp2) += (b8*dNvdz[gp][jj]);
 
                 // SUPG and PSPG stabilisation terms
                 //fact2 -= mu*d2N(jj);
@@ -1030,10 +1030,10 @@ int LagrangeElem3DNavierStokesTetra4Node::calcStiffnessAndResidual(vector<vector
                 */
 
                 // PSPG
-                Klocal(TIp3, TJ)   -= (b1*Dj(0,0) + b2*Dj(1,0) + b3*Dj(2,0))*tau[1];
-                Klocal(TIp3, TJp1) -= (b1*Dj(0,1) + b2*Dj(1,1) + b3*Dj(2,1))*tau[1];
-                Klocal(TIp3, TJp2) -= (b1*Dj(0,2) + b2*Dj(1,2) + b3*Dj(2,2))*tau[1];
-                Klocal(TIp3, TJp3) -= (b1*Dj(0,3) + b2*Dj(1,3) + b3*Dj(2,3))*tau[1];
+                Klocal(TIp3, TJ)   += (b1*Dj(0,0) + b2*Dj(1,0) + b3*Dj(2,0))*tau[1];
+                Klocal(TIp3, TJp1) += (b1*Dj(0,1) + b2*Dj(1,1) + b3*Dj(2,1))*tau[1];
+                Klocal(TIp3, TJp2) += (b1*Dj(0,2) + b2*Dj(1,2) + b3*Dj(2,2))*tau[1];
+                Klocal(TIp3, TJp3) += (b1*Dj(0,3) + b2*Dj(1,3) + b3*Dj(2,3))*tau[1];
 
                 // LSIC stabilisation
 
@@ -1055,7 +1055,7 @@ int LagrangeElem3DNavierStokesTetra4Node::calcStiffnessAndResidual(vector<vector
             Flocal(TI)   -= (b4*res2(0) + b1*stress(0,0) + b2*stress(0,1) + b3*stress(0,2) );
             Flocal(TIp1) -= (b4*res2(1) + b1*stress(1,0) + b2*stress(1,1) + b3*stress(1,2) );
             Flocal(TIp2) -= (b4*res2(2) + b1*stress(2,0) + b2*stress(2,1) + b3*stress(2,2) );
-            Flocal(TIp3) += (b4*grad.trace());
+            Flocal(TIp3) -= (b4*grad.trace());
 
             // SUPG stabilisation terms
             //Flocal(TI)   -= Da*rStab(0);
@@ -1063,7 +1063,7 @@ int LagrangeElem3DNavierStokesTetra4Node::calcStiffnessAndResidual(vector<vector
             //Flocal(TIp2) -= Da*rStab(2);
 
             // PSPG stabilisation terms
-            Flocal(TIp3) += (tau[1]*(b1*rStab(0)+b2*rStab(1)+b3*rStab(2)));
+            Flocal(TIp3) -= (tau[1]*(b1*rStab(0)+b2*rStab(1)+b3*rStab(2)));
 
             // LSIC stabilisation terms
             //fact2 = tau[2]*rho*grad.trace();
