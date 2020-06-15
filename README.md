@@ -26,6 +26,6 @@ Once successfully compiled, the executable `cfdsfemmpi` and the executables for 
 ### Usage with other input files
 
 * To run the simulations, from `bin` directory
-    * `mpirun -n <number-of-processors>  ./cfdsfemmpi  <input-file-prefix>  <control-parameters-file-name>`
+    * `mpirun -n <number-of-processors>  ./cfdsfemmpi  <input-file-prefix>  <control-parameters-file-name>`<petsc-options-file-name>
     * Example,
-    * `mpirun -n 10 cfdsfemmpi  LDC2Dquad-stru-FI  control-parameters-Re100-dt0p1.dat`
+    * `mpirun -n 10 cfdsfemmpi  LDC2Dquad-stru-FI  control-parameters-Re100-dt0p1.dat petsc_options.dat`

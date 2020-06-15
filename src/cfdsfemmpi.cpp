@@ -30,11 +30,11 @@ int main(int argc, char* argv[])
         cerr << " Aborting..." << endl;
     }
 
-    PetscInitialize(NULL, NULL, "../input/petsc_options.dat", NULL);
-
-    string  meshfile = argv[1];
+    string  meshfile    = argv[1];
     string  controlfile = argv[2];
+    string  petscfile   = argv[3];
 
+    PetscInitialize(NULL, NULL, petscfile.c_str(), NULL);
 
     StabFEM  stabfem;
 
@@ -57,8 +57,8 @@ int main(int argc, char* argv[])
 
     stabfem.solveFullyImplicit();
 
-    //string  outputfile = "solution.dat";
-    //stabfem.writeResult(outputfile);
+    string  outputfile = "solution.dat";
+    stabfem.writeResult(outputfile);
     //stabfem.postProcess();
 
     stabfem.printComputerTimes();
