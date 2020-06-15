@@ -705,7 +705,6 @@ int  StabFEM::solveFullyImplicit()
                 {
                   SolnData.soln[assyForSoln[ii]]   +=  arrayTempSoln[ii];
                 }
-                postProcess();
 
                 if(n_mpi_procs > 1)
                 {
