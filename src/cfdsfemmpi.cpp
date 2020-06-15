@@ -55,16 +55,15 @@ int main(int argc, char* argv[])
     stabfem.postProcess();
     //stabfem.diffStiffTest();
 
-    timerStart = MPI_Wtime();
     stabfem.solveFullyImplicit();
-    timerEnd = MPI_Wtime(); 
-    PetscPrintf(MPI_COMM_WORLD, "\n\n Elapsed time = %f seconds \n\n", timerEnd - timerStart );
 
     //string  outputfile = "solution.dat";
     //stabfem.writeResult(outputfile);
     //stabfem.postProcess();
 
-    PetscPrintf(MPI_COMM_WORLD, " Program is successful \n ");
+    stabfem.printComputerTimes();
+
+    PetscPrintf(MPI_COMM_WORLD, "\n\n\n Program is successful \n\n\n ");
 
     PetscFinalize(); //CHKERRQ(ierr);
 

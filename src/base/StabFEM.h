@@ -48,6 +48,8 @@ class StabFEM
         PetscInt  node_start, node_end, elem_start, elem_end;
         PetscInt  row_start, row_end, ntotdofs_local, ntotdofs_global;
 
+        double  computerTimeAssembly, computerTimeSolver, computerTimePostprocess, computerTimePattern, computerTimeTimeLoop;
+
         PetscErrorCode  errpetsc;
 
         double  conv_tol, rhoInf, timeFinal, dt;
@@ -111,6 +113,8 @@ class StabFEM
         int  readResult(string&);
 
         int  checkResult(string&);
+
+        int  printComputerTimes();
 
         ///////////////////////////////////////////////////////////
         //

@@ -21,6 +21,8 @@ StabFEM::StabFEM()
     ndof = 0; nElem_global = 0; nNode_global = 0; npElem = 0; fileCount = 0;
     ntotdofs_local = ntotdofs_global = 0;
 
+    computerTimeAssembly = computerTimeSolver = computerTimePostprocess = computerTimePattern = computerTimeTimeLoop = 0.0;
+
     AlgoType = 2;
 
     elems = nullptr;
@@ -670,6 +672,26 @@ int StabFEM::diffStiffTest()
 
   return 0;
 }
+
+
+
+
+int StabFEM::printComputerTimes()
+{
+    PetscPrintf(MPI_COMM_WORLD, "\n====================================================================\n");
+    PetscPrintf(MPI_COMM_WORLD, "\n       Computer time in seconds \n");
+    PetscPrintf(MPI_COMM_WORLD, "\n====================================================================\n");
+
+    PetscPrintf(MPI_COMM_WORLD, "\n\n     (1) Matrix Pattern                  = %12.6f \n", computerTimePattern );
+    PetscPrintf(MPI_COMM_WORLD, "\n\n     (2) Matrix Assembly                 = %12.6f \n", computerTimeAssembly );
+    PetscPrintf(MPI_COMM_WORLD, "\n\n     (3) Matrix Solver                   = %12.6f \n", computerTimeSolver );
+    PetscPrintf(MPI_COMM_WORLD, "\n\n     (4) Post process                    = %12.6f \n", computerTimePostprocess );
+    PetscPrintf(MPI_COMM_WORLD, "\n\n     (5) Total time in time loop         = %12.6f \n", computerTimeTimeLoop );
+    PetscPrintf(MPI_COMM_WORLD, "\n\n     (6) Difference (5-2-3-4)            = %12.6f \n", (computerTimeTimeLoop-computerTimeAssembly-computerTimeSolver-computerTimePostprocess) );
+
+    PetscPrintf(MPI_COMM_WORLD, "\n\n====================================================================\n\n");
+}
+
 
 
 

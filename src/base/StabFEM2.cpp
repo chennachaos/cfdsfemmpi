@@ -18,7 +18,9 @@ int StabFEM::setSolver(int slv, int *parm, bool cIO)
 
     solverPetsc = (SolverPetsc*) new SolverPetsc;
 
+    computerTimePattern = MPI_Wtime();
     prepareMatrixPattern();
+    computerTimePattern = MPI_Wtime() - computerTimePattern;
 
     if(solverPetsc != NULL)
       solverPetsc->checkIO = cIO;
@@ -527,7 +529,7 @@ int  StabFEM::solveFullyImplicit()
     int  stepsCompleted=0;
     int  aa, bb, ee, ii, jj, kk, count, row, col, ind, n1, n2, size1, size2;
 
-    double  norm_rhs, fact, fact1, fact2, timerStart, timerEnd;
+    double  norm_rhs, fact, fact1, fact2, timerVal;
     double  timeNow=dt, timeFact=0.0;
 
     VectorXd  reacVec(nNode_global*ndof);
@@ -541,13 +543,16 @@ int  StabFEM::solveFullyImplicit()
 
     //KimMoinFlowUnsteadyNavierStokes  analy(elemData[0], elemData[1], 1.0);
 
+    computerTimeTimeLoop = MPI_Wtime();
 
     //setInitialConditions();
     //timeFact = 1.0;
     //Time loop
     for(int tstep=0; tstep<stepsMax; tstep++)
     {
+        PetscPrintf(MPI_COMM_WORLD, " ==================================================================== \n");
         PetscPrintf(MPI_COMM_WORLD, " Time = %f \n", timeNow);
+        PetscPrintf(MPI_COMM_WORLD, " ==================================================================== \n");
 
         SolnData.setTimeParam();
         SolnData.timeUpdate();
@@ -583,7 +588,7 @@ int  StabFEM::solveFullyImplicit()
 
             PetscPrintf(MPI_COMM_WORLD, "\n Element loop \n");
 
-            timerStart = MPI_Wtime();
+            timerVal = MPI_Wtime();
 
             // loop over elements and compute matrix and residual
             for(ee=0; ee<nElem_global; ee++)
@@ -627,8 +632,9 @@ int  StabFEM::solveFullyImplicit()
               } // if(elem_proc_id[ee] == this_proc_id)
             } //Element Loop
 
-            timerEnd = MPI_Wtime(); 
-            PetscPrintf(MPI_COMM_WORLD, "\n\n Elapsed time for matrix assembly = %f seconds \n\n", timerEnd - timerStart );
+            timerVal = MPI_Wtime() - timerVal;
+            computerTimeAssembly += timerVal;
+            PetscPrintf(MPI_COMM_WORLD, "\n\n Elapsed time for matrix assembly = %f seconds \n\n", timerVal );
 
             MPI_Barrier(MPI_COMM_WORLD);
 
@@ -674,14 +680,15 @@ int  StabFEM::solveFullyImplicit()
             {
                 PetscPrintf(MPI_COMM_WORLD, "Assembly done. Solving the matrix system. \n");
 
-                timerStart = MPI_Wtime();
+                timerVal = MPI_Wtime();
                 if( solverPetsc->factoriseAndSolve() )
                 {
                   PetscPrintf(MPI_COMM_WORLD, " PETSc solver not converged. \n\n");
                   return -1;
                 }
-                timerEnd = MPI_Wtime(); 
-                PetscPrintf(MPI_COMM_WORLD, "\n\n Elapsed time for PETSc solver = %f seconds \n\n", timerEnd - timerStart );
+                timerVal = MPI_Wtime() - timerVal;
+                computerTimeSolver += timerVal;
+                PetscPrintf(MPI_COMM_WORLD, "\n\n Elapsed time for PETSc solver = %f seconds \n\n", timerVal );
 
                 /////////////////////////////////////////////////////////////////////////////
                 // get the solution vector onto all the processors
@@ -722,7 +729,9 @@ int  StabFEM::solveFullyImplicit()
         PetscPrintf(MPI_COMM_WORLD, " Postprocessing... \n\n");
         if(this_mpi_proc == 0)
         {
+            timerVal = MPI_Wtime();
             postProcess();
+            computerTimePostprocess += (MPI_Wtime() - timerVal);
 
             double TotalForce[3] = {0.0, 0.0, 0.0};
             for(ii=0; ii<nOutputFaceLoads; ++ii)
@@ -730,7 +739,7 @@ int  StabFEM::solveFullyImplicit()
               TotalForce[0] +=  reacVec[outputEdges[ii][0]*ndof];
               TotalForce[1] +=  reacVec[outputEdges[ii][0]*ndof+1];
             }
-    
+
             fout_convdata <<  timeNow << '\t' << TotalForce[0] << '\t' << TotalForce[1] << endl;
             cout << endl; cout << endl;
         }
@@ -741,6 +750,8 @@ int  StabFEM::solveFullyImplicit()
           break;
  
     } //Time loop
+
+    computerTimeTimeLoop = MPI_Wtime() - computerTimeTimeLoop;
 
     return 0;
 }
