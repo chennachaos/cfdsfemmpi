@@ -21,7 +21,7 @@ using namespace std;
 
 int main(int argc, char* argv[])
 {
-    PetscInitialize(NULL, NULL, "../input/petsc_options.dat", NULL);
+    PetscInitialize(NULL, NULL, "../testdata/ldc2dquad-mesh2/petsc_options.dat", NULL);
 
     string  meshfile = "../testdata/ldc2dquad-mesh2/LDC2Dquad-mesh2";
     string  controlfile = "../testdata/ldc2dquad-mesh2/control-parameters-Re1000.dat";
