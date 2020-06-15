@@ -34,7 +34,13 @@ int main(int argc, char* argv[])
     string  controlfile = argv[2];
     string  petscfile   = argv[3];
 
+
     PetscInitialize(NULL, NULL, petscfile.c_str(), NULL);
+
+    PetscPrintf(MPI_COMM_WORLD, "\n    Input mesh file         = %s \n ", meshfile.c_str());
+    PetscPrintf(MPI_COMM_WORLD, "\n    Control parameters file = %s \n ", controlfile.c_str());
+    PetscPrintf(MPI_COMM_WORLD, "\n    PETSc options file      = %s \n ", petscfile.c_str());
+
 
     StabFEM  stabfem;
 
