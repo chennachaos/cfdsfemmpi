@@ -1,4 +1,6 @@
 -ksp_type preonly
 -pc_type lu
 -pc_factor_mat_solver_type mumps
-
+-log_view
+-memory_view
+-info petscinforfile

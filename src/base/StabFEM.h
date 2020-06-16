@@ -92,6 +92,8 @@ class StabFEM
 
         ~StabFEM();
 
+        deallocatePetscObjects();
+
         ///////////////////////////////////////////////////////////
         //
         // PRE-PROCESSOR PHASE member functions

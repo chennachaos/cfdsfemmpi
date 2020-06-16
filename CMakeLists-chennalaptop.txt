@@ -35,7 +35,7 @@ set(CMAKE_CXX_COMPILER "/usr/bin/g++")
 #message ("${CXX_COMPILER_NAME}")
 #message ("${CXX}")
 
-set(COPT "-w -std=c++11 -O3 -g -mavx2 -ftree-vectorize -ftree-vectorizer-verbose=1 -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic -Wno-uninitialized -Wno-sign-compare -Wno-write-strings  -Wno-deprecated  -Wno-unused  -Wno-format -Wno-narrowing  -Wno-reorder  -Wreturn-type -Wno-unused-parameter -fopenmp -fpermissive -frounding-math")
+set(COPT "-w -std=c++11 -g -mavx2 -ftree-vectorize -ftree-vectorizer-verbose=1 -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic -Wno-uninitialized -Wno-sign-compare -Wno-write-strings  -Wno-deprecated  -Wno-unused  -Wno-format -Wno-narrowing  -Wno-reorder  -Wreturn-type -Wno-unused-parameter -fopenmp -fpermissive -frounding-math")
 
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COPT}")

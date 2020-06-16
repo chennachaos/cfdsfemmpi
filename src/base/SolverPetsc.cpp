@@ -8,21 +8,13 @@
 SolverPetsc::SolverPetsc()
 {
   FREED = false;
-
-  //KSPCreate(PETSC_COMM_WORLD, &ksp);
-
-  //MatCreate(PETSC_COMM_WORLD, &mtx);
-  //VecCreate(PETSC_COMM_WORLD, &soln);
-  //VecCreate(PETSC_COMM_WORLD, &solnPrev);
-  //VecCreate(PETSC_COMM_WORLD, &rhsVec);
-  //VecCreate(PETSC_COMM_WORLD, &reac);
 }
 
 
 SolverPetsc::~SolverPetsc()
 {
   //PetscPrintf(MPI_COMM_WORLD, "SolverPetsc::~SolverPetsc() \n");
-  //cout << "SolverPetsc::~SolverPetsc() " << endl;
+  cout << "SolverPetsc::~SolverPetsc() " << endl;
   //free();
 /*
   errpetsc = VecDestroy(&soln);
@@ -46,7 +38,7 @@ SolverPetsc::~SolverPetsc()
   //cout << " errpetsc = " << errpetsc << endl;
 */
   //PetscPrintf(MPI_COMM_WORLD, "SolverPetsc::~SolverPetsc() \n");
-  //cout << "SolverPetsc::~SolverPetsc() " << endl;
+  cout << "SolverPetsc::~SolverPetsc() " << endl;
 }
 
 
@@ -60,8 +52,6 @@ SolverPetsc::~SolverPetsc()
 int SolverPetsc::initialise(int size_local, int size_global, int* diag_nnz, int* offdiag_nnz)
 {
     nRow = nCol = size_global;
-
-    //MatSetOption(mtx, MAT_IGNORE_NEGATIVE_INDICES, PETSC_TRUE);
 
     int dummy = 50;
 
@@ -130,20 +120,17 @@ int SolverPetsc::initialise(int size_local, int size_global, int* diag_nnz, int*
     // Set KSP options from the input file
     // This is convenient as it allows to choose different options
     // from the input files instead of recompiling the code
-    errpetsc = KSPSetFromOptions(ksp);
-    CHKERRQ(errpetsc);
+    errpetsc = KSPSetFromOptions(ksp);    CHKERRQ(errpetsc);
 
     PetscPrintf(MPI_COMM_WORLD, "\n\n Creating PC context ... \n\n");
 
     // Get the PC context
-    errpetsc = KSPGetPC(ksp, &pc);
-    CHKERRQ(errpetsc);
+    errpetsc = KSPGetPC(ksp, &pc);    CHKERRQ(errpetsc);
 
     PetscPrintf(MPI_COMM_WORLD, "\n\n Setting PC context from input file ... \n\n");
 
     // Set PC options from the input file
-    errpetsc = PCSetFromOptions(pc);
-    CHKERRQ(errpetsc);
+    errpetsc = PCSetFromOptions(pc);    CHKERRQ(errpetsc);
 
     currentStatus = SOLVER_EMPTY;
 
@@ -153,34 +140,6 @@ int SolverPetsc::initialise(int size_local, int size_global, int* diag_nnz, int*
 
 int SolverPetsc::setSolverAndParameters()
 {
-/*
-    // set the KSP 
-    ///////////////////////////////////////////////
-
-    errpetsc = KSPCreate(PETSC_COMM_WORLD, &ksp);CHKERRQ(errpetsc);
-
-    errpetsc = KSPSetOperators(ksp, mtx, mtx);CHKERRQ(errpetsc);
-
-    KSPSetType(ksp, KSPCG);
-
-    //KSPSetInitialGuessNonzero(ksp, PETSC_TRUE);
-    //KSPSetInitialGuessNonzero(ksp, PETSC_FALSE);
-
-    errpetsc = KSPSetFromOptions(ksp);CHKERRQ(errpetsc);
-
-    // set the PC
-    ///////////////////////////////////////////////
-
-    //errpetsc = PCCreate(PETSC_COMM_WORLD, &pc);CHKERRQ(errpetsc);
-
-    errpetsc = KSPGetPC(ksp,&pc);CHKERRQ(errpetsc);
-
-    errpetsc = KSPSetReusePreconditioner(ksp, PETSC_FALSE);
-
-    PCSetType(pc, PCILU);
-
-    errpetsc = PCSetFromOptions(pc);CHKERRQ(errpetsc);
-*/
     return 0;
 }
 
@@ -216,15 +175,16 @@ int SolverPetsc::free()
   PetscPrintf(MPI_COMM_WORLD, "SolverPetsc::free() \n");
 
   errpetsc = VecDestroy(&solnVec);CHKERRQ(errpetsc);
-  //cout << " errpetsc = " << errpetsc << endl;
-  errpetsc = VecDestroy(&solnVecPrev);CHKERRQ(errpetsc);
-  //cout << " errpetsc = " << errpetsc << endl;
+  cout << " errpetsc = " << errpetsc << endl;
+  //errpetsc = VecDestroy(&solnVecPrev);CHKERRQ(errpetsc);
+  cout << " errpetsc = " << errpetsc << endl;
   errpetsc = VecDestroy(&rhsVec);CHKERRQ(errpetsc);
-  //cout << " errpetsc = " << errpetsc << endl;
+  cout << " errpetsc = " << errpetsc << endl;
   errpetsc = VecDestroy(&reacVec);CHKERRQ(errpetsc);
-  //cout << " errpetsc = " << errpetsc << endl;
+  cout << " errpetsc = " << errpetsc << endl;
   errpetsc = MatDestroy(&mtx);CHKERRQ(errpetsc);
-  //cout << " errpetsc = " << errpetsc << endl;
+  cout << " errpetsc = " << errpetsc << endl;
+
   //errpetsc = KSPGetPC(ksp,&pc);CHKERRQ(errpetsc);
   //cout << " errpetsc = " << errpetsc << endl;
   //errpetsc = PCDestroy(&pc);CHKERRQ(errpetsc);
@@ -232,8 +192,9 @@ int SolverPetsc::free()
   errpetsc = PCReset(pc);CHKERRQ(errpetsc);
   //cout << " errpetsc = " << errpetsc << endl;
   errpetsc = KSPDestroy(&ksp);CHKERRQ(errpetsc);
+  cout << " errpetsc = " << errpetsc << endl;
   errpetsc = KSPReset(ksp);CHKERRQ(errpetsc);
-  //cout << " errpetsc = " << errpetsc << endl;
+  cout << " errpetsc = " << errpetsc << endl;
 
   FREED = true;
 
@@ -253,7 +214,7 @@ int SolverPetsc::printMatrix(int dig, int dig2, bool gfrmt, int indent, bool int
   //PetscViewerCreate(PETSC_COMM_WORLD, &viewer_matx);
   //PetscViewerDrawOpen();
   //PetscViewerSetFormat(viewer_matx, PETSC_VIEWER_ASCII_MATLAB);
-  MatView(mtx, PETSC_VIEWER_STDOUT_WORLD);
+  //MatView(mtx, PETSC_VIEWER_STDOUT_WORLD);
   //MatView(A,viewer);
 
   return 0;

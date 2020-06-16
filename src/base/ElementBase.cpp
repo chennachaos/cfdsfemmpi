@@ -22,6 +22,7 @@ ElementBase::ElementBase()
 ElementBase::~ElementBase()
 {
 //  cout << "     ElementBase: destructor ...\n\n";
+    SolnData = nullptr;
 }
 
 

@@ -54,6 +54,8 @@ int main(int argc, char* argv[])
 
     PetscPrintf(MPI_COMM_WORLD, "\n\n\n Test is successful \n\n\n ");
 
+    //stabfem.deallocatePetscObjects();
+
     PetscFinalize(); //CHKERRQ(ierr);
 
     return 0;

@@ -27,21 +27,51 @@ StabFEM::StabFEM()
 
     elems = nullptr;
 
-    solverPetsc = NULL;
+    solverPetsc = nullptr;
 }
 
 
 StabFEM::~StabFEM()
 {
-    if(elems != NULL)
+    //cout << " StabFEM::~StabFEM() " << this_mpi_proc << endl;
+    if(elems != nullptr)
     {
       for(int ii=0;ii<nElem_global;++ii)
         delete elems[ii];
 
       delete [] elems;
-      elems = NULL;
+      elems = nullptr;
     }
+
+    if(elemsFaces != nullptr)
+    {
+      for(int ii=0;ii<ElemFaceLoadData.size();++ii)
+        delete elemsFaces[ii];
+
+      delete [] elemsFaces;
+      elemsFaces = nullptr;
+    }
+
+    if(solverPetsc != nullptr)
+    {
+      delete solverPetsc;
+      solverPetsc = nullptr;
+    }
+
+    //cout << " StabFEM::~StabFEM() " << this_mpi_proc << endl;
 }
+
+
+
+
+int  StabFEM::deallocatePetscObjects()
+{
+  if(solverPetsc != nullptr)
+    solverPetsc->free();
+
+  return 1;
+}
+
 
 
 

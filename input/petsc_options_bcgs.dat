@@ -6,3 +6,9 @@
 -sub_pc_factor_fill 3
 -ksp_rtol 1.e-10
 -ksp_max_it 1000
+-log_view
+-memory_view
+-malloc_log
+-malloc_dump
+-info petscinforfile
+-log_trace petsclogtracefile

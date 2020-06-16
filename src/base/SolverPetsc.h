@@ -35,7 +35,7 @@ class SolverPetsc
 
     PetscMPIInt size;
 
-    PetscViewer    viewer_matx, viewer_vect;
+    //PetscViewer    viewer_matx, viewer_vect;
 
     ////////////////////////////
     //

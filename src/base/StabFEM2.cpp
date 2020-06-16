@@ -537,9 +537,6 @@ int  StabFEM::solveFullyImplicit()
     ind = npElem*ndof;
     VectorXd  Flocal(ind);
     MatrixXd  Klocal(ind, ind);
-    PetscScalar *arrayTempSoln;
-    Vec            vec_SEQ;
-    VecScatter     ctx;
 
     //KimMoinFlowUnsteadyNavierStokes  analy(elemData[0], elemData[1], 1.0);
 
@@ -693,6 +690,10 @@ int  StabFEM::solveFullyImplicit()
                 /////////////////////////////////////////////////////////////////////////////
                 // get the solution vector onto all the processors
                 /////////////////////////////////////////////////////////////////////////////
+
+                PetscScalar *arrayTempSoln;
+                Vec            vec_SEQ;
+                VecScatter     ctx;
 
                 if(n_mpi_procs > 1)
                 {
