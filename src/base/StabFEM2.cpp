@@ -199,6 +199,7 @@ int StabFEM::prepareMatrixPattern()
     errpetsc  = PetscMalloc1(ntotdofs_local,  &diag_nnz);CHKERRQ(errpetsc);
     errpetsc  = PetscMalloc1(ntotdofs_local,  &offdiag_nnz);CHKERRQ(errpetsc);
 
+
     n1 = 500; n2 = 250;
     if( (n1 > ntotdofs_local) || (n2 > ntotdofs_local) )
     {
@@ -246,6 +247,11 @@ int StabFEM::prepareMatrixPattern()
     } //for(ee=0;)
 
     solverPetsc->currentStatus = PATTERN_OK;
+
+    errpetsc  = PetscFree(diag_nnz);   CHKERRQ(errpetsc);
+
+    errpetsc  = PetscFree(offdiag_nnz);   CHKERRQ(errpetsc);
+
 
     PetscPrintf(MPI_COMM_WORLD, " StabFEM::prepareMatrixPattern()  .... FINISHED. Took %f  milliseconds \n", (tend-tstart)*1000);
 

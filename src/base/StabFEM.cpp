@@ -26,13 +26,14 @@ StabFEM::StabFEM()
     AlgoType = 2;
 
     elems = nullptr;
-
+    elemsFaces = nullptr;
     solverPetsc = nullptr;
 }
 
 
 StabFEM::~StabFEM()
 {
+
     //cout << " StabFEM::~StabFEM() " << this_mpi_proc << endl;
     if(elems != nullptr)
     {
@@ -397,6 +398,7 @@ void StabFEM::assignBoundaryConditions(double timeCur, double dt, double timeFac
 
         ind = n1*ndof+n2;
 
+        //SolnData.soln[ind] = DirichletBCs[ii][2] * timeFact;
         SolnData.solnApplied[ind] = DirichletBCs[ii][2] * timeFact - SolnData.soln[ind];
         //cout << ii << '\t' << n1 << '\t' << n2 << '\t' << ind << '\t' << solnApplied[ind] << endl;
 

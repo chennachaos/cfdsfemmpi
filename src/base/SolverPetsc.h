@@ -23,19 +23,13 @@ class SolverPetsc
 
     PetscInt nRow, nCol, nnz;
 
-    MatInfo info;
-
     int currentStatus;
 
-    bool  checkIO, FREED;
+    bool  checkIO;
 
     PetscReal norm; // norm of solution error
 
     PetscErrorCode errpetsc;
-
-    PetscMPIInt size;
-
-    //PetscViewer    viewer_matx, viewer_vect;
 
     ////////////////////////////
     //

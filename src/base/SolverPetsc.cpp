@@ -7,38 +7,16 @@
 
 SolverPetsc::SolverPetsc()
 {
-  FREED = false;
 }
 
 
 SolverPetsc::~SolverPetsc()
 {
   //PetscPrintf(MPI_COMM_WORLD, "SolverPetsc::~SolverPetsc() \n");
-  cout << "SolverPetsc::~SolverPetsc() " << endl;
-  //free();
-/*
-  errpetsc = VecDestroy(&soln);
-  //cout << " errpetsc = " << errpetsc << endl;
-  errpetsc = VecDestroy(&solnPrev);
-  //cout << " errpetsc = " << errpetsc << endl;
-  errpetsc = VecDestroy(&rhsVec);
-  //cout << " errpetsc = " << errpetsc << endl;
-  errpetsc = VecDestroy(&reac);
-  //cout << " errpetsc = " << errpetsc << endl;
-  errpetsc = MatDestroy(&mtx);
-  //cout << " errpetsc = " << errpetsc << endl;
-  //errpetsc = KSPGetPC(ksp,&pc);
-  //cout << " errpetsc = " << errpetsc << endl;
-  //errpetsc = PCDestroy(&pc);
-  //cout << " errpetsc = " << errpetsc << endl;
-  errpetsc = PCReset(pc);
-  //cout << " errpetsc = " << errpetsc << endl;
-  errpetsc = KSPDestroy(&ksp);
-  //errpetsc = KSPReset(ksp);CHKERRQ(errpetsc);
-  //cout << " errpetsc = " << errpetsc << endl;
-*/
+  //cout << "SolverPetsc::~SolverPetsc() " << endl;
+
   //PetscPrintf(MPI_COMM_WORLD, "SolverPetsc::~SolverPetsc() \n");
-  cout << "SolverPetsc::~SolverPetsc() " << endl;
+  //cout << "SolverPetsc::~SolverPetsc() " << endl;
 }
 
 
@@ -172,33 +150,26 @@ int SolverPetsc::free()
 {
   //if(FREED) return 0;
 
-  PetscPrintf(MPI_COMM_WORLD, "SolverPetsc::free() \n");
+  //PetscPrintf(MPI_COMM_WORLD, "SolverPetsc::free() \n");
 
   errpetsc = VecDestroy(&solnVec);CHKERRQ(errpetsc);
-  cout << " errpetsc = " << errpetsc << endl;
-  //errpetsc = VecDestroy(&solnVecPrev);CHKERRQ(errpetsc);
-  cout << " errpetsc = " << errpetsc << endl;
-  errpetsc = VecDestroy(&rhsVec);CHKERRQ(errpetsc);
-  cout << " errpetsc = " << errpetsc << endl;
-  errpetsc = VecDestroy(&reacVec);CHKERRQ(errpetsc);
-  cout << " errpetsc = " << errpetsc << endl;
-  errpetsc = MatDestroy(&mtx);CHKERRQ(errpetsc);
-  cout << " errpetsc = " << errpetsc << endl;
-
-  //errpetsc = KSPGetPC(ksp,&pc);CHKERRQ(errpetsc);
   //cout << " errpetsc = " << errpetsc << endl;
-  //errpetsc = PCDestroy(&pc);CHKERRQ(errpetsc);
+  //errpetsc = VecDestroy(&solnVecPrev);CHKERRQ(errpetsc);
+  //cout << " errpetsc = " << errpetsc << endl;
+  errpetsc = VecDestroy(&rhsVec);CHKERRQ(errpetsc);
+  //cout << " errpetsc = " << errpetsc << endl;
+  errpetsc = VecDestroy(&reacVec);CHKERRQ(errpetsc);
+  //cout << " errpetsc = " << errpetsc << endl;
+  errpetsc = MatDestroy(&mtx);CHKERRQ(errpetsc);
   //cout << " errpetsc = " << errpetsc << endl;
   errpetsc = PCReset(pc);CHKERRQ(errpetsc);
   //cout << " errpetsc = " << errpetsc << endl;
   errpetsc = KSPDestroy(&ksp);CHKERRQ(errpetsc);
-  cout << " errpetsc = " << errpetsc << endl;
+  //cout << " errpetsc = " << errpetsc << endl;
   errpetsc = KSPReset(ksp);CHKERRQ(errpetsc);
-  cout << " errpetsc = " << errpetsc << endl;
+  //cout << " errpetsc = " << errpetsc << endl;
 
-  FREED = true;
-
-  PetscPrintf(MPI_COMM_WORLD, "SolverPetsc::free() \n");
+  //PetscPrintf(MPI_COMM_WORLD, "SolverPetsc::free() \n");
 
   return 0;
 }
@@ -208,9 +179,9 @@ int SolverPetsc::free()
 
 int SolverPetsc::printMatrix(int dig, int dig2, bool gfrmt, int indent, bool interactive)
 {
-  errpetsc = MatAssemblyBegin(mtx, MAT_FINAL_ASSEMBLY);//CHKERRQ(errpetsc);
-  errpetsc = MatAssemblyEnd(mtx, MAT_FINAL_ASSEMBLY);//CHKERRQ(errpetsc);
- 
+  //errpetsc = MatAssemblyBegin(mtx, MAT_FINAL_ASSEMBLY);    //CHKERRQ(errpetsc);
+  //errpetsc = MatAssemblyEnd(mtx, MAT_FINAL_ASSEMBLY);      //CHKERRQ(errpetsc);
+
   //PetscViewerCreate(PETSC_COMM_WORLD, &viewer_matx);
   //PetscViewerDrawOpen();
   //PetscViewerSetFormat(viewer_matx, PETSC_VIEWER_ASCII_MATLAB);
@@ -254,8 +225,6 @@ int SolverPetsc::solve()
 {
   //PetscPrintf(MPI_COMM_WORLD, "  SolverPetsc::solve() ...  \n\n");
 
-  //time_t tstart, tend; 
-
   if (currentStatus != FACTORISE_OK)
   {
     cerr << " SolverPetsc::solve ... factorise matrix first!" << endl;
@@ -266,12 +235,6 @@ int SolverPetsc::solve()
   errpetsc = MatAssemblyEnd(mtx,MAT_FINAL_ASSEMBLY); CHKERRQ(errpetsc);
 
   //PetscPrintf(MPI_COMM_WORLD, "  SolverPetsc::solve() ... Matrix Assembly ...  \n\n");
-
-  //PetscViewerCreate(PETSC_COMM_WORLD, &viewer_matx);
-  //PetscViewerDrawOpen();
-  //PetscViewerSetFormat(viewer_matx, PETSC_VIEWER_ASCII_MATLAB);
-
-  //MatView(mtx,PETSC_VIEWER_STDOUT_WORLD);
 
   errpetsc = VecAssemblyBegin(rhsVec); CHKERRQ(errpetsc);
   errpetsc = VecAssemblyEnd(rhsVec); CHKERRQ(errpetsc);
@@ -286,10 +249,6 @@ int SolverPetsc::solve()
   errpetsc = VecZeroEntries(solnVec); CHKERRQ(errpetsc);
 
   //PetscPrintf(MPI_COMM_WORLD, "  SolverPetsc::solve() ... vec zero ...  \n\n");
-
-  //VecView(rhsVec, PETSC_VIEWER_STDOUT_WORLD);
-
-  //tstart = time(0);
 
   errpetsc = KSPSolve(ksp, rhsVec, solnVec); CHKERRQ(errpetsc);
 
@@ -313,13 +272,6 @@ int SolverPetsc::solve()
   {
     PetscPrintf(MPI_COMM_WORLD, "\n Convergence in %d iterations.\n\n", its);
   }
-
-  //errpetsc = KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);//CHKERRQ(errpetsc);
-  //VecView(soln, PETSC_VIEWER_STDOUT_WORLD);
-
-  //tend = time(0); 
-
-  //cout << "SolverPetsc::solve()  took "<< difftime(tend, tstart) <<" second(s)."<< endl;
 
   return 0;
 }

@@ -92,7 +92,7 @@ class StabFEM
 
         ~StabFEM();
 
-        deallocatePetscObjects();
+        int  deallocatePetscObjects();
 
         ///////////////////////////////////////////////////////////
         //
