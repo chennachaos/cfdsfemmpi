@@ -580,7 +580,7 @@ int  StabFEM::readResult(string&  fname)
 
 int StabFEM::diffStiffTest()
 {
-    SolnData.setTimeParam();
+    SolnData.setTimeParam(tis, rhoInf, dt);
 
     int  elemnum = 0;
     cout << " Diff Test for element " << elemnum << endl;

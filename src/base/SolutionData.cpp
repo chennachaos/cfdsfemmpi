@@ -8,10 +8,6 @@ SolutionData::SolutionData()
 {
   td.resize(100);
 
-  tis = 0;
-  rhoInf = 0.0;
-  dt  = 1.0;
-
   return;
 }
 
@@ -54,7 +50,7 @@ void SolutionData::setZero()
 
 
 
-void  SolutionData::setTimeParam()
+void  SolutionData::setTimeParam(int tis, double rhoInf, double dt)
 {
   //cout << tis << '\t' << rhoInf << '\t' << dt << endl;
   SetTimeParametersFluid(tis, rhoInf, dt, td);

@@ -544,6 +544,11 @@ int  StabFEM::solveFullyImplicit()
     VectorXd  Flocal(ind);
     MatrixXd  Klocal(ind, ind);
 
+    PetscScalar *arrayTempSoln;
+    Vec            vec_SEQ;
+    VecScatter     ctx;
+    VecScatterCreateToAll(solverPetsc->solnVec, &ctx, &vec_SEQ);
+
     //KimMoinFlowUnsteadyNavierStokes  analy(elemData[0], elemData[1], 1.0);
 
     computerTimeTimeLoop = MPI_Wtime();
@@ -557,7 +562,7 @@ int  StabFEM::solveFullyImplicit()
         PetscPrintf(MPI_COMM_WORLD, " Time = %f \n", timeNow);
         PetscPrintf(MPI_COMM_WORLD, " ==================================================================== \n");
 
-        SolnData.setTimeParam();
+        SolnData.setTimeParam(tis, rhoInf, dt);
         SolnData.timeUpdate();
 
         //
@@ -697,13 +702,8 @@ int  StabFEM::solveFullyImplicit()
                 // get the solution vector onto all the processors
                 /////////////////////////////////////////////////////////////////////////////
 
-                PetscScalar *arrayTempSoln;
-                Vec            vec_SEQ;
-                VecScatter     ctx;
-
                 if(n_mpi_procs > 1)
                 {
-                  VecScatterCreateToAll(solverPetsc->solnVec, &ctx, &vec_SEQ);
                   VecScatterBegin(ctx, solverPetsc->solnVec, vec_SEQ, INSERT_VALUES, SCATTER_FORWARD);
                   VecScatterEnd(ctx, solverPetsc->solnVec, vec_SEQ, INSERT_VALUES, SCATTER_FORWARD);
 
@@ -723,8 +723,6 @@ int  StabFEM::solveFullyImplicit()
                 if(n_mpi_procs > 1)
                 {
                   VecRestoreArray(vec_SEQ, &arrayTempSoln);
-                  VecScatterDestroy(&ctx);
-                  VecDestroy(&vec_SEQ);
                 }
                 else
                 {
@@ -757,6 +755,9 @@ int  StabFEM::solveFullyImplicit()
           break;
  
     } //Time loop
+
+    VecScatterDestroy(&ctx);
+    VecDestroy(&vec_SEQ);
 
     computerTimeTimeLoop = MPI_Wtime() - computerTimeTimeLoop;
 

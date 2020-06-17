@@ -9,8 +9,7 @@
 class  SolutionData
 {
   public:
-    int  vecsize, tis;
-    double  rhoInf, dt;
+    int  vecsize;
 
     VectorXd  solnDot, solnDotPrev, solnDotCur, solnExtrap;
     VectorXd  soln, solnPrev, solnPrev2, solnPrev3, solnPrev4, solnCur, solnInit, solnApplied;
@@ -24,17 +23,11 @@ class  SolutionData
 
     ~SolutionData(){}
 
-    void setTimeIncrementType(int ttt)
-    {  tis = ttt; }
-
-    void setSpectralRadius(double ttt)
-    {  rhoInf = ttt; }
-
     void  initialise(int size1);
 
     void  setZero();
 
-    void  setTimeParam();
+    void  setTimeParam(int tis, double rhoInf, double dt);
 
     void  timeUpdate();
 
