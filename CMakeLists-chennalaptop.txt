@@ -35,9 +35,10 @@ set(CMAKE_CXX_COMPILER "/usr/bin/g++")
 #message ("${CXX_COMPILER_NAME}")
 #message ("${CXX}")
 
-#set(COPT "-w -std=c++11 -g  -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic -Wno-uninitialized -Wno-sign-compare -Wno-write-strings  -Wno-deprecated  -Wno-unused  -Wno-format -Wno-narrowing  -Wno-reorder  -Wreturn-type -Wno-unused-parameter -fopenmp")
+#set(COPT "-w -std=c++11 -g  -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic -Wno-write-strings  -Wno-deprecated -Wno-narrowing  -Wno-reorder  -Wreturn-type -Wno-unused-parameter -fopenmp")
 
-set(COPT "-w -std=c++11 -O2  -Wall")
+
+set(COPT "-std=c++11 -O2 -Wall -Wno-pedantic -Wno-comment -Wno-unused -Wno-uninitialized -Wno-vla -Wno-format -Wno-sign-compare")
 
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COPT}")
@@ -102,4 +103,5 @@ install(TARGETS  test-ldc3d-gradedmesh-32k-Re1000  RUNTIME DESTINATION /home/che
 
 #enable_testing()
 #add_subdirectory(tests)
+
 

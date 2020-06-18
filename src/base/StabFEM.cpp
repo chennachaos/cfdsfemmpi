@@ -722,6 +722,8 @@ int StabFEM::printComputerTimes()
     PetscPrintf(MPI_COMM_WORLD, "\n\n     (6) Difference (5-2-3-4)            = %12.6f \n", (computerTimeTimeLoop-computerTimeAssembly-computerTimeSolver-computerTimePostprocess) );
 
     PetscPrintf(MPI_COMM_WORLD, "\n\n====================================================================\n\n");
+
+    return 0;
 }
 
 
