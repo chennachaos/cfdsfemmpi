@@ -80,7 +80,7 @@ void LagrangeElem3DNavierStokesHexa8Node::prepareElemData(vector<vector<double> 
       {
         cout << " Negative Jacobian in 'LagrangeElem3DNavierStokesHexa8Node::prepareElemData' " << endl;
         cout << " Jac = " << Jac << endl;
-        exit[1];
+        exit(1);
       }
       //
 

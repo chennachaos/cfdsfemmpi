@@ -37,7 +37,7 @@ StabFEM::~StabFEM()
     //cout << " StabFEM::~StabFEM() " << this_mpi_proc << endl;
     if(elems != nullptr)
     {
-      for(int ii=0;ii<nElem_global;++ii)
+      for(unsigned int ii=0;ii<nElem_global;++ii)
         delete elems[ii];
 
       delete [] elems;
@@ -46,7 +46,7 @@ StabFEM::~StabFEM()
 
     if(elemsFaces != nullptr)
     {
-      for(int ii=0;ii<ElemFaceLoadData.size();++ii)
+      for(unsigned int ii=0;ii<ElemFaceLoadData.size();++ii)
         delete elemsFaces[ii];
 
       delete [] elemsFaces;
@@ -70,7 +70,7 @@ int  StabFEM::deallocatePetscObjects()
   if(solverPetsc != nullptr)
     solverPetsc->free();
 
-  return 1;
+  return 0;
 }
 
 
@@ -722,6 +722,8 @@ int StabFEM::printComputerTimes()
     PetscPrintf(MPI_COMM_WORLD, "\n\n     (6) Difference (5-2-3-4)            = %12.6f \n", (computerTimeTimeLoop-computerTimeAssembly-computerTimeSolver-computerTimePostprocess) );
 
     PetscPrintf(MPI_COMM_WORLD, "\n\n====================================================================\n\n");
+
+    return 0;
 }
 
 
