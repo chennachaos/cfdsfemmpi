@@ -67,13 +67,14 @@ int main(int argc, char* argv[])
     //stabfem.diffStiffTest();
 
     stabfem.solveFullyImplicit();
+    MPI_Barrier(MPI_COMM_WORLD);
 
     //string  outputfile = "solution.dat";
     //stabfem.writeResult(outputfile);
     //stabfem.postProcess();
 
     stabfem.printComputerTimes();
-    //MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Barrier(MPI_COMM_WORLD);
 
     PetscPrintf(MPI_COMM_WORLD, "\n\n\n Program is successful \n\n\n ");
 
