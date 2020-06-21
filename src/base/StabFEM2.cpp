@@ -38,8 +38,8 @@ int StabFEM::prepareMatrixPattern()
     int  size1, size2, row, col;
     int  tempDOF, domTemp, ind;
     int  r, c, r1, c1, count=0, count1=0, count2=0, ii, jj, ee, dd, ind1, ind2, nsize;
-    int  *tt1, *tt2, val1, val2, nnz, nnz_max_row, n1, n2, kk, e1, e2, ll, aa, bb, nn, dof;
-    int  side, start1, start2, nr1, nr2;
+    int  *tt, val1, val2, nnz, nnz_max_row, n1, n2, kk, e1, e2, ll, aa, bb, nn, dof;
+    int  side, start1, start2, nr1, nr2, count_diag, count_offdiag, tempInt;
 
     PetscInt  *colTemp;
     PetscScalar  *arrayTemp;
@@ -176,6 +176,8 @@ int StabFEM::prepareMatrixPattern()
       }
     }
 
+    errpetsc = MPI_Barrier(MPI_COMM_WORLD);
+
     assyForSoln.resize(ntotdofs_global);
     ind = 0;
     for(ii=0;ii<nNode_global;++ii)
@@ -189,10 +191,47 @@ int StabFEM::prepareMatrixPattern()
       }
     }
 
-    PetscPrintf(MPI_COMM_WORLD, "\n\n Preparing matrix pattern DONE \n\n");
     PetscPrintf(MPI_COMM_WORLD, "\n\n Element DOF values initialised \n\n");
+    errpetsc = MPI_Barrier(MPI_COMM_WORLD);
 
     cout << " Total DOF   = " << '\t' << ntotdofs_local << '\t' << ntotdofs_global << endl;
+
+
+    //vector<vector<int> > DDconn;
+    vector<set<int> > forAssyMat;
+    set<int>::iterator it;
+
+    forAssyMat.resize(ntotdofs_global);
+
+    for(ee=0; ee<nElem_global; ee++)
+    {
+        tt = &(elems[ee]->forAssyVec[0]);
+        nsize = elems[ee]->forAssyVec.size();
+
+        for(ii=0;ii<nsize;ii++)
+        {
+            r = tt[ii];
+
+            if(r != -1)
+            {
+              //if(r <= row_start && r >= row_end)
+              //{
+              for(jj=0;jj<nsize;jj++)
+              {
+                if(tt[jj] != -1)
+                {
+                  //printf("ii.... %5d \t %5d \t %5d \t %5d \n",ii, jj, r, tt[jj]);
+                    forAssyMat[r].insert(tt[jj]);
+                }
+              }
+              //}
+            }
+        }
+    }
+
+    errpetsc = MPI_Barrier(MPI_COMM_WORLD);
+    PetscPrintf(MPI_COMM_WORLD, "\n\n Preparing matrix pattern DONE \n\n");
+
 
     PetscInt  *diag_nnz, *offdiag_nnz;
 
@@ -200,19 +239,33 @@ int StabFEM::prepareMatrixPattern()
     errpetsc  = PetscMalloc1(ntotdofs_local,  &offdiag_nnz);CHKERRQ(errpetsc);
 
 
-    n1 = 500; n2 = 250;
-    if( (n1 > ntotdofs_local) || (n2 > ntotdofs_local) )
+    kk = 0;
+    nnz_max_row = 0;
+    for(ii=row_start; ii<=row_end; ii++)
     {
-      n1 = ntotdofs_local;
-      n2 = n1;
+      size1 = forAssyMat[ii].size();
+
+      nnz_max_row = max(nnz_max_row, size1);
+
+      count_diag=0, count_offdiag=0;
+      for(it=forAssyMat[ii].begin(); it!=forAssyMat[ii].end(); ++it)
+      {
+        tempInt = *it;
+
+        if(tempInt >= row_start && tempInt <= row_end)
+          count_diag++;
+        else
+          count_offdiag++;
+      }
+
+      //cout << " count_diag ..." << ii << '\t' << count_diag << '\t' << count_offdiag << endl;
+
+      diag_nnz[kk]    = count_diag;
+      offdiag_nnz[kk] = count_offdiag;
+      kk++;
     }
 
-    for(ii=0; ii<ntotdofs_local; ii++)
-    {
-      diag_nnz[ii]    = n1;
-      offdiag_nnz[ii] = n2;
-    }
-
+    errpetsc = MPI_Barrier(MPI_COMM_WORLD);
     PetscPrintf(MPI_COMM_WORLD, "\n\n Initialising petsc solver \n\n");
 
     // Initialize the petsc solver
@@ -246,12 +299,21 @@ int StabFEM::prepareMatrixPattern()
       }
     } //for(ee=0;)
 
+    errpetsc = MPI_Barrier(MPI_COMM_WORLD);
+
     solverPetsc->currentStatus = PATTERN_OK;
 
     errpetsc  = PetscFree(diag_nnz);   CHKERRQ(errpetsc);
 
     errpetsc  = PetscFree(offdiag_nnz);   CHKERRQ(errpetsc);
 
+    for(ii=0; ii<NodeDofArrayNew.size(); ii++)
+    {
+      NodeDofArrayOld[ii].clear();
+      NodeDofArrayNew[ii].clear();
+    }
+    NodeDofArrayOld.clear();
+    NodeDofArrayNew.clear();
 
     PetscPrintf(MPI_COMM_WORLD, " StabFEM::prepareMatrixPattern()  .... FINISHED. Took %f  milliseconds \n", (tend-tstart)*1000);
 

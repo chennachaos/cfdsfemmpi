@@ -66,7 +66,7 @@ int main(int argc, char* argv[])
     stabfem.postProcess();
     //stabfem.diffStiffTest();
 
-    stabfem.solveFullyImplicit();
+    //stabfem.solveFullyImplicit();
     MPI_Barrier(MPI_COMM_WORLD);
 
     //string  outputfile = "solution.dat";
@@ -75,6 +75,20 @@ int main(int argc, char* argv[])
 
     stabfem.printComputerTimes();
     MPI_Barrier(MPI_COMM_WORLD);
+
+  PetscLogDouble mem1, mem2, mem3, mem4;
+  PetscErrorCode  errpetsc;
+
+  //the current resident set size (memory used) for the program.
+  errpetsc = PetscMemoryGetCurrentUsage(&mem1);   //CHKERRQ(errpetsc);
+  //the maximum resident set size (memory used) for the program
+  //errpetsc = PetscMemoryGetMaximumUsage(&mem2);            //CHKERRQ(errpetsc);
+  //the current amount of memory used that was PetscMalloc()ed
+  errpetsc = PetscMallocGetCurrentUsage(&mem3);   //CHKERRQ(errpetsc);
+  //the maximum amount of memory used that was PetscMalloc()ed at any time during this run.
+  //errpetsc = PetscMallocGetMaximumUsage(&mem4);            //CHKERRQ(errpetsc);
+
+  PetscPrintf(MPI_COMM_WORLD, " Petsc memory allocation details ... %12.8f \t %12.8f \t%12.8f \t%12.8f \n\n", mem1, mem2, mem3, mem4);
 
     PetscPrintf(MPI_COMM_WORLD, "\n\n\n Program is successful \n\n\n ");
 
