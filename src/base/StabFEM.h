@@ -61,7 +61,6 @@ class StabFEM
 
         vector<int>  assyForSoln, OutputNodes;
         vector<int>  node_map_get_old, node_map_get_new;
-        vector<int>  dof_map_get_old, dof_map_get_new;
         vector<int>  elem_proc_id, node_proc_id;
 
         vector<vector<int> >  NodeDofArrayOld, NodeDofArrayNew;
