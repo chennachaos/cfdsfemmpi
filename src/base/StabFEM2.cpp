@@ -95,9 +95,6 @@ int StabFEM::prepareMatrixPattern()
     node_map_get_old.resize(nNode_global, 0);
     node_map_get_new.resize(nNode_global, 0);
 
-    dof_map_get_old.resize(ntotdofs_global, 0);
-    dof_map_get_new.resize(ntotdofs_global, 0);
-
     elem_proc_id.resize(nElem_global);
     node_proc_id.resize(nNode_global);
 
@@ -120,11 +117,6 @@ int StabFEM::prepareMatrixPattern()
         {
           node_map_get_old[ii] = ii;
           node_map_get_new[ii] = ii;
-        }
-        for(ii=0; ii<ntotdofs_global; ii++)
-        {
-          dof_map_get_old[ii] = ii;
-          dof_map_get_new[ii] = ii;
         }
 
         for(ii=0;ii<nNode_global;++ii)
@@ -155,23 +147,26 @@ int StabFEM::prepareMatrixPattern()
 
     for(ee=0; ee<nElem_global; ++ee)
     {
-      elems[ee]->prepareElemData(node_coords);
-
-      npElem = elems[ee]->nodeNums.size();
-
-      nsize = ndof*npElem;
-
-      elems[ee]->forAssyVec.resize(nsize);
-
-      for(ii=0; ii<npElem; ++ii)
+      if(elem_proc_id[ee] == this_mpi_proc)
       {
-        ind = ndof*ii;
+        elems[ee]->prepareElemData(node_coords);
 
-        kk = elems[ee]->nodeNums[ii];
+        npElem = elems[ee]->nodeNums.size();
 
-        for(jj=0;jj<ndof;++jj)
+        nsize = ndof*npElem;
+
+        elems[ee]->forAssyVec.resize(nsize);
+
+        for(ii=0; ii<npElem; ++ii)
         {
-          elems[ee]->forAssyVec[ind+jj] = NodeDofArrayNew[kk][jj];
+          ind = ndof*ii;
+
+          kk = elems[ee]->nodeNums[ii];
+
+          for(jj=0;jj<ndof;++jj)
+          {
+            elems[ee]->forAssyVec[ind+jj] = NodeDofArrayNew[kk][jj];
+          }
         }
       }
     }
@@ -203,8 +198,13 @@ int StabFEM::prepareMatrixPattern()
 
     forAssyMat.resize(ntotdofs_global);
 
+    //for(ii=row_start; ii<=row_end; ii++)
+        //forAssyMat[ii].reserve(500);
+
     for(ee=0; ee<nElem_global; ee++)
     {
+      if(elem_proc_id[ee] == this_mpi_proc)
+      {
         tt = &(elems[ee]->forAssyVec[0]);
         nsize = elems[ee]->forAssyVec.size();
 
@@ -214,8 +214,8 @@ int StabFEM::prepareMatrixPattern()
 
             if(r != -1)
             {
-              //if(r <= row_start && r >= row_end)
-              //{
+              if(r >= row_start && r <= row_end)
+              {
               for(jj=0;jj<nsize;jj++)
               {
                 if(tt[jj] != -1)
@@ -224,9 +224,10 @@ int StabFEM::prepareMatrixPattern()
                     forAssyMat[r].insert(tt[jj]);
                 }
               }
-              //}
+              }
             }
         }
+      }
     }
 
     errpetsc = MPI_Barrier(MPI_COMM_WORLD);
@@ -270,7 +271,7 @@ int StabFEM::prepareMatrixPattern()
 
     // Initialize the petsc solver
     solverPetsc->initialise(ntotdofs_local, ntotdofs_global, diag_nnz, offdiag_nnz);
-
+    errpetsc = MPI_Barrier(MPI_COMM_WORLD);
 
     //Create parallel matrix, specifying only its global dimensions.
     //When using MatCreate(), the matrix format can be specified at

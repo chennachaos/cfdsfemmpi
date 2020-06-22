@@ -16,8 +16,6 @@ class  SolutionData
     VectorXd  td;
 
     vector<int>  node_map_get_old, node_map_get_new;
-    vector<int>  dof_map_get_old, dof_map_get_new;
-
 
     SolutionData();
 

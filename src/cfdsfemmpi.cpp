@@ -66,7 +66,7 @@ int main(int argc, char* argv[])
     stabfem.postProcess();
     //stabfem.diffStiffTest();
 
-    stabfem.solveFullyImplicit();
+    //stabfem.solveFullyImplicit();
     MPI_Barrier(MPI_COMM_WORLD);
 
     //string  outputfile = "solution.dat";
