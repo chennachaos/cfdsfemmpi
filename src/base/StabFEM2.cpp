@@ -95,11 +95,7 @@ int StabFEM::prepareMatrixPattern()
     node_map_get_old.resize(nNode_global, 0);
     node_map_get_new.resize(nNode_global, 0);
 
-    elem_proc_id.resize(nElem_global);
-    node_proc_id.resize(nNode_global);
-
-    fill(elem_proc_id.begin(), elem_proc_id.end(), 0);
-    fill(node_proc_id.begin(), node_proc_id.end(), 0);
+    node_proc_id.resize(nNode_global, 0);
 
     if(n_mpi_procs == 1)
     {
@@ -147,7 +143,7 @@ int StabFEM::prepareMatrixPattern()
 
     for(ee=0; ee<nElem_global; ++ee)
     {
-      if(elem_proc_id[ee] == this_mpi_proc)
+      if(elems[ee]->getSubdomainId() == this_mpi_proc)
       {
         elems[ee]->prepareElemData(node_coords);
 
@@ -203,7 +199,7 @@ int StabFEM::prepareMatrixPattern()
 
     for(ee=0; ee<nElem_global; ee++)
     {
-      if(elem_proc_id[ee] == this_mpi_proc)
+      if(elems[ee]->getSubdomainId() == this_mpi_proc)
       {
         tt = &(elems[ee]->forAssyVec[0]);
         nsize = elems[ee]->forAssyVec.size();
@@ -291,7 +287,7 @@ int StabFEM::prepareMatrixPattern()
     vector<int>  vecIntTemp;
     for(ee=0; ee<nElem_global; ee++)
     {
-      if(elem_proc_id[ee] == this_mpi_proc)
+      if(elems[ee]->getSubdomainId() == this_mpi_proc)
       {
         size1 = elems[ee]->forAssyVec.size();
         vecIntTemp = elems[ee]->forAssyVec;
@@ -327,6 +323,8 @@ int StabFEM::prepareMatrixPattern()
 int StabFEM::partitionMesh()
 {
     PetscPrintf(MPI_COMM_WORLD, "\n     StabFEM::partitionMesh()  .... STARTED ...\n");
+
+    vector<int>  elem_proc_id(nElem_global, 0);
 
     if(this_mpi_proc == 0)
     {
@@ -426,6 +424,10 @@ int StabFEM::partitionMesh()
     {
       elems[ee]->setSubdomainId(elem_proc_id[ee]);
     }
+    MPI_Barrier(MPI_COMM_WORLD);
+
+    nElem_local = std::count(elem_proc_id.begin(), elem_proc_id.end(), this_mpi_proc);
+    cout << " nElem_local =  " << nElem_local << '\t' << this_mpi_proc << '\t' << n_mpi_procs << endl;
 
     PetscPrintf(MPI_COMM_WORLD, "\n     StabFEM::partitionMesh()  .... FINISHED ...\n");
 
@@ -436,9 +438,6 @@ int StabFEM::partitionMesh()
 int StabFEM::prepareDataForParallel()
 {
       int n_subdomains = n_mpi_procs, subdomain=0, ee, ii, jj, kk, n1, n2, ind;
-
-      nElem_local = std::count(elem_proc_id.begin(), elem_proc_id.end(), this_mpi_proc);
-      cout << " nElem_local =  " << nElem_local << '\t' << this_mpi_proc << '\t' << n_mpi_procs << endl;
 
       nNode_owned = std::count(node_proc_id.begin(), node_proc_id.end(), this_mpi_proc);
       cout << " nNode_owned =  " << nNode_owned << '\t' << this_mpi_proc << '\t' << n_mpi_procs << endl;
@@ -700,7 +699,7 @@ int  StabFEM::solveFullyImplicit()
 
                 //PetscPrintf(MPI_COMM_WORLD, "\n Assembling matrices and vectors \n");
                 solverPetsc->assembleMatrixAndVectorSerial(elems[ee]->forAssyVec, Klocal, Flocal);
-              } // if(elem_proc_id[ee] == this_proc_id)
+              } // if(elems[ee]->getSubdomainId() == this_proc_id)
             } //Element Loop
 
             timerVal = MPI_Wtime() - timerVal;

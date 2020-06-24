@@ -60,8 +60,7 @@ class StabFEM
         vector<vector<int> >     elemConn;                  //!< element-node connectivity array
 
         vector<int>  assyForSoln, OutputNodes;
-        vector<int>  node_map_get_old, node_map_get_new;
-        vector<int>  elem_proc_id, node_proc_id;
+        vector<int>  node_proc_id, node_map_get_old, node_map_get_new;
 
         vector<vector<int> >  NodeDofArrayOld, NodeDofArrayNew;
         vector<vector<bool> >  NodeTypeOld, NodeTypeNew;
