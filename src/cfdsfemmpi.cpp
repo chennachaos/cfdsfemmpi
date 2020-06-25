@@ -56,10 +56,9 @@ int main(int argc, char* argv[])
     stabfem.prepareInputData();
 
     double timerStart, timerEnd;
-    int parm[3];
 
     timerStart = MPI_Wtime();
-    stabfem.setSolver(1, parm, false);
+    stabfem.setSolver(1, NULL, false);
     timerEnd = MPI_Wtime();
     PetscPrintf(MPI_COMM_WORLD, "\n\n Elapsed time = %f seconds \n\n", timerEnd - timerStart );
 
