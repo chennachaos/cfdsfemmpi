@@ -514,7 +514,11 @@ int StabFEM::prepareDataForParallel()
             elemConn[ee][ii] = node_map_get_new[elemConn[ee][ii]];
 
           elems[ee]->nodeNums = elemConn[ee];
+
+          // elemConn array is no longer needed.
+          elemConn[ee].clear();
       }
+      elemConn.clear();
 
       // update Dirichlet BC information with new node numbers
       for(ii=0; ii<nDBC; ii++)

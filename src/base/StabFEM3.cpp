@@ -74,19 +74,19 @@ void  StabFEM::postProcess()
       {
         procIdVTKcell->SetTuple1(ee, elems[ee]->getSubdomainId());
 
-        npElem = elemConn[ee].size();
+        npElem = elems[ee]->nodeNums.size();
 
         if(npElem == 3)
         {
           for(ii=0; ii<npElem; ii++)
-            triaVTK->GetPointIds()->SetId(ii, node_map_get_old[elemConn[ee][ii]] );
+            triaVTK->GetPointIds()->SetId(ii, node_map_get_old[elems[ee]->nodeNums[ii]] );
 
           uGridVTK->InsertNextCell(triaVTK->GetCellType(), triaVTK->GetPointIds());
         }
         else if(npElem == 4)
         {
           for(ii=0; ii<npElem; ii++)
-            quadVTK->GetPointIds()->SetId(ii, node_map_get_old[elemConn[ee][ii]] );
+            quadVTK->GetPointIds()->SetId(ii, node_map_get_old[elems[ee]->nodeNums[ii]] );
 
           uGridVTK->InsertNextCell(quadVTK->GetCellType(), quadVTK->GetPointIds());
         }
@@ -116,19 +116,19 @@ void  StabFEM::postProcess()
       {
         procIdVTKcell->SetTuple1(ee, elems[ee]->getSubdomainId());
 
-        npElem = elemConn[ee].size();
+        npElem = elems[ee]->nodeNums.size();
 
         if(npElem == 4)
         {
           for(ii=0; ii<npElem; ii++)
-            tetraVTK->GetPointIds()->SetId(ii, node_map_get_old[elemConn[ee][ii]] );
+            tetraVTK->GetPointIds()->SetId(ii, node_map_get_old[elems[ee]->nodeNums[ii]] );
 
           uGridVTK->InsertNextCell(tetraVTK->GetCellType(), tetraVTK->GetPointIds());
         }
         else if(npElem == 8)
         {
           for(ii=0; ii<npElem; ii++)
-            hexaVTK->GetPointIds()->SetId(ii, node_map_get_old[elemConn[ee][ii]] );
+            hexaVTK->GetPointIds()->SetId(ii, node_map_get_old[elems[ee]->nodeNums[ii]] );
 
           uGridVTK->InsertNextCell(hexaVTK->GetCellType(), hexaVTK->GetPointIds());
         }
