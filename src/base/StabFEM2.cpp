@@ -304,6 +304,7 @@ int StabFEM::prepareMatrixPattern()
 
     errpetsc  = PetscFree(offdiag_nnz);   CHKERRQ(errpetsc);
 
+    //TODO: use vector<T>().swap(x) to empty the vector and also deallocate the memory
     for(ii=0; ii<NodeDofArrayNew.size(); ii++)
     {
       NodeDofArrayOld[ii].clear();
