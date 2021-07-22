@@ -33,8 +33,8 @@ Once successfully compiled, the executable `cfdsfemmpi` and the executables for 
 ## Numerical examples
 ### Flow in a lid-driven cavity in 3D
 
-[[https://github.com/chennachaos/cfdsfemmpi/blob/parallel/wiki/LDC3D-Hex-1p5M-mesh1.png]]
-[[https://github.com/chennachaos/cfdsfemmpi/blob/parallel/wiki/LDC3D-Hex-1p5M-640cores-procId.png]]
-[[https://github.com/chennachaos/cfdsfemmpi/blob/parallel/wiki/LDC3D-Hex-1p5M-Re1000-velmagn.png]]
-[[https://github.com/chennachaos/cfdsfemmpi/blob/parallel/wiki/LDC3D-Hex-1p5M-Re1000-pres.png]]
-[[https://github.com/chennachaos/cfdsfemmpi/blob/parallel/wiki/LDC3D-meshM4-speedup-2.jpg]]
+![](https://github.com/chennachaos/cfdsfemmpi/blob/parallel/wiki/LDC3D-Hex-1p5M-mesh1.png)
+![](https://github.com/chennachaos/cfdsfemmpi/blob/parallel/wiki/LDC3D-Hex-1p5M-640cores-procId.png)
+![](https://github.com/chennachaos/cfdsfemmpi/blob/parallel/wiki/LDC3D-Hex-1p5M-Re1000-velmagn.png)
+![](https://github.com/chennachaos/cfdsfemmpi/blob/parallel/wiki/LDC3D-Hex-1p5M-Re1000-pres.png)
+![](https://github.com/chennachaos/cfdsfemmpi/blob/parallel/wiki/LDC3D-meshM4-speedup-2.jpg)
